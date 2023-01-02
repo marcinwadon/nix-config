@@ -41,7 +41,7 @@ let
 
       ssh = {
         enable = true;
-        startAgent = false;
+#       startAgent = false;
       };
     };
   };
