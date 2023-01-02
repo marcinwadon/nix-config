@@ -28,7 +28,7 @@ let
           trust = "ultimate";
         } ];
       };
-      
+
       htop = {
         enable = true;
         settings = {
@@ -39,15 +39,14 @@ let
       
       jq.enable = true;
 
-      ssh = {
-        enable = true;
-#       startAgent = false;
-      };
+      ssh.enable = true;
     };
   };
 in
 [
   ./git
+  ./fish
   ./neovim-ide
+  ./tmux
   more
 ]
