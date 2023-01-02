@@ -16,6 +16,11 @@
       fsType = "ext4";
     };
 
+  fileSystems."/var/projects" =
+    { device = "10.0.0.10:/volume1/projects";
+      fsType = "nfs";
+    };
+
   swapDevices = [ ];
 
   # Enables DHCP on each ethernet and wireless interface. In case of scripted networking
