@@ -1,4 +1,4 @@
-{ inputs, system, ... }:
+{ inputs, ... }:
 
 with inputs;
 
@@ -7,40 +7,41 @@ let
     inherit fish-bobthefish-theme;
   };
 
-  pkgs = import nixpkgs {
-    inherit system;
+  pkgs = { darwin }: import nixpkgs {
+    system = if darwin then "aarch64-darwin" else "x86_64-linux";
 
     config.allowUnfree = true;
 
     overlays = [
       fishOverlay
       nurpkgs.overlay
-      neovim-flake.overlays.${system}.default
+      neovim-flake.overlays.${if darwin then "aarch64-darwin" else "x86_64-linux"}.default
     ];
   };
 
-  nur = import nurpkgs {
+  nur = { darwin }: import nurpkgs {
     inherit pkgs;
     nurpkgs = pkgs;
   };
 
-  imports = [
-    neovim-flake.nixosModules.${system}.hm
+  imports = { darwin }: [
+    neovim-flake.nixosModules.${if darwin then "aarch64-darwin" else "x86_64-linux"}.hm
     ../home/home.nix
   ];
 
-  mkHome = { hidpi ? false }: (
+  mkHome = { darwin ? false }: (
     home-manager.lib.homeManagerConfiguration {
-      inherit pkgs;
+      pkgs = pkgs { inherit darwin; };
 
       extraSpecialArgs = {
-        inherit hidpi;
+        inherit darwin;
       };
 
-      modules = [{ inherit imports; }];
+      modules = [{ imports = imports { inherit darwin; }; }];
     }
   );
 in
 {
-  marcin-edp = mkHome { hidpi = false; };
+  marcin-nixos = mkHome { darwin = false; };
+  marcin-macos = mkHome { darwin = true; };
 }

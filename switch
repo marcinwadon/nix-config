@@ -1,0 +1,29 @@
+#! /usr/bin/env bash
+
+set +x
+
+rebuild_home_macos() {
+  nix build .#homeConfigurations.marcin-macos.activationPackage
+  activateHM
+}
+
+rebuild_home_nixos() {
+  nix build .#homeConfigurations.marcin-nixos.activationPackage
+  activateHM
+}
+
+activateHM() {
+  rm -rf ~/.config/secrets
+  HOME_MANAGER_BACKUP_EXT=bak result/activate
+}
+
+case $1 in
+  "macos")
+    rebuild_home_macos;;
+  "nixos")
+    rebuild_home_nixos;;
+  "update-fish")
+    fish -c fish_update_completions;;
+  *)
+    echo "expected 'macos', 'nixos' or 'update-fish'";;
+esac

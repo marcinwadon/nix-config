@@ -1,11 +1,11 @@
-{ inputs, system, ... }:
+{ inputs, ... }:
 
 let
   nixosSystem = inputs.nixpkgs.lib.nixosSystem;
 in
 {
   nixos = nixosSystem {
-    inherit system;
+    system = "x86_64-linux";
     specialArgs = { inherit inputs; };
     modules = [
       ../system/machine/nixos

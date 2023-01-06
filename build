@@ -1,0 +1,32 @@
+#! /usr/bin/env bash
+
+set +x
+
+build_nixos() {
+  nix build .#nixos
+}
+
+build_home_nixos() {
+  nix build .#homeConfigurations.marcin-nixos.activationPackage
+}
+
+build_macos() {
+  darwin-rebuild build --flake .#macos
+}
+
+build_home_macos() {
+  nix build .#homeConfigurations.marcin-macos.activationPackage
+}
+
+case $1 in
+  "nixos")
+    build_nixos;;
+  "home-nixos")
+    build_home_nixos;;
+  "macos")
+    build_macos;;
+  "home-macos")
+    build_home_macos;;
+  *)
+    echo "expected 'nixos', 'macos', 'home-nixos' or 'home-macos'";;
+esac

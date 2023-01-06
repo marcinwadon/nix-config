@@ -2,7 +2,12 @@
   description = "my nixos config";
 
   inputs = {
-    nixpkgs.url = "nixpkgs/nixos-unstable";
+    nixpkgs.url = "nixpkgs/23.05-pre";
+
+    darwin = {
+      url = github:LnL7/nix-darwin;
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
 
     nurpkgs.url = github:nix-community/NUR;
 
@@ -22,18 +27,21 @@
   };
 
   outputs = inputs:
-    let system = "x86_64-linux"; in
     {
       homeConfigurations = (
         import ./outputs/home-conf.nix {
-          inherit inputs system;
+          inherit inputs;
         }
       );
       nixosConfigurations = (
         import ./outputs/nixos-conf.nix {
-          inherit inputs system;
+          inherit inputs;
         }
-      );
+        );
+        darwinConfigurations = (
+          import ./outputs/darwin-conf.nix {
+            inherit inputs;
+          }
+          );
     };
 }
-

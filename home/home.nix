@@ -1,15 +1,15 @@
-{ config, lib, pkgs, stdenv, ... }:
+{ config, lib, pkgs, stdenv, darwin, ... }:
 
 let
-  username = "marcin";
-  homeDirectory = "/home/${username}";
+  username = if darwin then "marcinwadon" else "marcin";
+  homeDirectory = if darwin then "/Users/${username}" else "/home/${username}";
   configHome = "${homeDirectory}/.config";
 
   defaultPkgs = with pkgs; [
     any-nix-shell
     asciinema
     bottom
-    # cachix
+    cachix
     dig
     duf
     exa
