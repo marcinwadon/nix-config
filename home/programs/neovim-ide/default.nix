@@ -12,6 +12,7 @@ in
         vimAlias = true;
         #disableArrows = false;
         lineNumberMode = "number";
+        mapLeaderSpace = false;
         preventJunkFiles = true;
         customPlugins = with pkgs.vimPlugins; [
           multiple-cursors
@@ -107,6 +108,10 @@ in
         git = {
           enable = true;
           gitsigns.enable = false;
+        };
+        nnoremap = {
+          "<leader>mc" = "<cmd>lua require('telescope').extensions.metals.commands()<CR>";
+          "<leader><leader>o" = "<cmd>lua require('metals').organize_imports()<CR>";
         };
       };
     };

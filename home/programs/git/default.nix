@@ -52,7 +52,7 @@ in
       ca = "commit -am";
       dc = "diff --cached";
       lg = "log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative";
-      amm = "commit --ammend";
+      amm = "commit --amend";
       mr = "merge --ff-only";
     };
     extraConfig = gitConfig;
