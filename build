@@ -3,7 +3,7 @@
 set +x
 
 build_nixos() {
-  nix build .#nixos
+  nixos-rebuild build --flake .#nixos --impure
 }
 
 build_home_nixos() {
