@@ -22,7 +22,7 @@ let
       "ssh://git@github.com".pushInsteadOf = "gh:";
     };
     github = {
-      token = "";
+      token = import ../../secrets/github;
       user = "marcinwadon";
     };
   };
