@@ -7,6 +7,7 @@ in
   environment.systemPackages = with pkgs; [ vim wget fish ];
 
   programs.fish.enable = true;
+
   system.activationScripts.postActivation.text = ''
     sudo chsh -s ${lib.getBin pkgs.fish}/bin/fish marcinwadon
   '';

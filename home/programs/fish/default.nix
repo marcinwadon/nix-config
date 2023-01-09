@@ -12,6 +12,12 @@ let
     set -g theme_nerd_fonts yes
     set -g theme_newline_cursor yes
     set -g theme_color_scheme solarized
+    '';
+
+  gpgConfig = ''
+    set -x GPG_TTY (tty)
+    set -x SSH_AUTH_SOCK (gpgconf --list-dirs agent-ssh-socket)
+    gpgconf --launch gpg-agent
   '';
 
   custom = pkgs.callPackage ./plugins.nix {};
@@ -24,7 +30,7 @@ let
   fishConfig = ''
     bind \t accept-autosuggestion
     set fish_greeting
-  '' + fzfConfig + themeConfig;
+  '' + gpgConfig + fzfConfig + themeConfig;
 in
 {
   programs.fish = {
@@ -46,8 +52,15 @@ in
       ".." = "cd ..";
       ping = "prettyping";
       tree = "exa -T";
+      flush = "dscacheutil -flushcache && killall -HUP mDNSResponder";
+      cleanup = "find . -type f -name '*.DS_Store' -ls -delete";
+      gpg-restart = "gpg-connect-agent updatestartuptty /bye";
+      gpg-reload = "gpg-connect-agent 'scd serialno' 'learn --force' /bye";
     };
     shellInit = fishConfig;
+    functions = {
+      join = "ssh -o StrictHostKeyChecking=false admin@$argv";
+    };
   };
 
  # xdg.configFile."fish/completions/keytool.fish".text = custom.completions.keytool;
