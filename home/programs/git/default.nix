@@ -32,7 +32,7 @@ in
 {
   home.packages = with pkgs.gitAndTools; [
     diff-so-fancy
-    # git-crypt
+    git-crypt
     hub
     tig
   ];
