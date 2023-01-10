@@ -42,8 +42,6 @@ let
 
       ssh = {
         enable = true;
-        forwardAgent = true;
-        #startAgent = false;
         matchBlocks = import ../secrets/ssh.nix;
       };
     };
