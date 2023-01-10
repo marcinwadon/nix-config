@@ -4,9 +4,16 @@ let
 
 in
 {
-  environment.systemPackages = with pkgs; [ vim wget fish ];
+  environment.systemPackages = with pkgs; [
+    vim wget fish yubikey-manager yubikey-personalization gnupg
+  ];
 
   programs.fish.enable = true;
+
+  programs.gnupg.agent = {
+    enable = true;
+    enableSSHSupport = true;
+  };
 
   system.activationScripts.postActivation.text = ''
     sudo chsh -s ${lib.getBin pkgs.fish}/bin/fish marcinwadon
