@@ -27,6 +27,10 @@ let
           source = ../../public.gpg;
           trust = "ultimate";
         } ];
+        scdaemonSettings = {
+          reader-port = "Yubico Yubi";
+          disable-ccid = true;
+        };
       };
 
       htop = {
