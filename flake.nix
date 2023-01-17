@@ -2,7 +2,8 @@
   description = "my nixos config";
 
   inputs = {
-    nixpkgs.url = "nixpkgs/23.05-pre";
+    #nixpkgs.url = "nixpkgs/23.05-pre";
+    nixpkgs.url = "nixpkgs/master";
 
     darwin = {
       url = github:LnL7/nix-darwin;

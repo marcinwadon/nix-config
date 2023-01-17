@@ -20,6 +20,7 @@ in
           vim-repeat
           vim-surround
         ];
+        neovim.package = pkgs.neovim-nightly;
         lsp = {
           enable = true;
           folds = true;
@@ -36,7 +37,6 @@ in
           scala = {
             inherit metals;
             enable = true;
-            type = "nvim-metals";
           };
           ts = true;
         };
