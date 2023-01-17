@@ -29,6 +29,7 @@ in
 
   imports = builtins.concatMap import [
     ./programs
+    ./scripts
   ];
 
   home = {

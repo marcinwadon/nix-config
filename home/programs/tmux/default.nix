@@ -3,6 +3,7 @@
 let
   plugins = pkgs.tmuxPlugins // pkgs.callPackage ./custom-plugins.nix {};
   tmuxConf = builtins.readFile ./default.conf;
+  tmux-sessions = pkgs.callPackage ./tmux-sessions.nix {};
 in
 {
   programs.tmux = {
@@ -30,4 +31,7 @@ in
     shortcut = "a";
     terminal = "screen-256color";
   };
+  home.packages = [
+    tmux-sessions
+  ];
 }
