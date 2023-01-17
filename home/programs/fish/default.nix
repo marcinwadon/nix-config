@@ -27,6 +27,16 @@ let
     src = pkgs.fishPlugins.foreign-env.src;
   };
 
+  z = {
+    name = "z";
+    src = pkgs.fetchFromGitHub {
+      owner = "jethrokuan";
+      repo = "z";
+      rev = "master";
+      sha256 = "sha256-+FUBM7CodtZrYKqU542fQD+ZDGrd2438trKM0tIESs0=";
+    };
+  };
+
   fishConfig = ''
     bind \t accept-autosuggestion
     set fish_greeting
@@ -35,7 +45,7 @@ in
 {
   programs.fish = {
     enable = true;
-    plugins = [ custom.theme fenv ];
+    plugins = [ custom.theme fenv z ];
     interactiveShellInit = ''
       eval (direnv hook fish)
       any-nix-shell fish --info-right | source
