@@ -14,6 +14,7 @@ let
     duf
     exa
     fd
+    gh
     killall
     lnav
     ncdu
