@@ -39,6 +39,7 @@ in
             enable = true;
           };
           ts = true;
+          smithy = true;
         };
         plantuml.enable = true;
         visuals = {
@@ -75,7 +76,9 @@ in
           enable = true;
           hideDotFiles = false;
           hideFiles = [ "node_modules" ".cache" ];
+          openOnSetup = false;
         };
+        neoclip.enable = true;
         hop.enable = true;
         todo.enable = true;
         tabline.nvimBufferline.enable = true;

@@ -19,6 +19,8 @@ let
     lnav
     ncdu
     nyancat
+    nix-index
+    nix-output-monitor
     prettyping
     ripgrep
     tldr

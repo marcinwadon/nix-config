@@ -19,6 +19,7 @@
 
     neovim-flake = {
       url = github:gvolpe/neovim-flake;
+      inputs.nixpkgs.follows = "nixpkgs";
     };
 
     fish-bobthefish-theme = {
