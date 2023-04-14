@@ -2,6 +2,8 @@
 
 let
   metals = pkgs.callPackage ./metals.nix { };
+
+  openaiApiKey = import ../../secrets/openaiApiKey;
 in
 {
   programs.neovim-ide = {
@@ -81,6 +83,7 @@ in
         };
         neoclip.enable = true;
         hop.enable = true;
+        notifications.enable = true;
         todo.enable = true;
         tabline.nvimBufferline.enable = true;
         treesitter = {
@@ -112,6 +115,14 @@ in
         git = {
           enable = true;
           gitsigns.enable = true;
+        };
+        spider = {
+          enable = true;
+          skipInsignificantPunctuation = true;
+        };
+        chatgpt = {
+          enable = true;
+          inherit openaiApiKey;
         };
         nnoremap = {
           "<leader>mc" = "<cmd>lua require('telescope').extensions.metals.commands()<CR>";
