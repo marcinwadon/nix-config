@@ -20,7 +20,6 @@ in
           multiple-cursors
           vim-mergetool
           vim-repeat
-          vim-surround
         ];
         neovim.package = pkgs.neovim-nightly;
         lsp = {
@@ -41,7 +40,7 @@ in
             enable = true;
           };
           ts = true;
-          smithy = true;
+          smithy.enable = true;
           go = true;
         };
         plantuml.enable = true;
@@ -91,9 +90,6 @@ in
           autotagHtml = true;
           context.enable = true;
         };
-        scala = {
-          highlightMode = "treesitter";
-        };
         keys = {
           enable = true;
           whichKey.enable = true;
@@ -103,6 +99,9 @@ in
           type = "nerdcommenter";
         };
         shortcuts = {
+          enable = true;
+        };
+        surround = {
           enable = true;
         };
         telescope = {
