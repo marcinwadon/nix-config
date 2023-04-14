@@ -40,6 +40,7 @@ in
           };
           ts = true;
           smithy = true;
+          go = true;
         };
         plantuml.enable = true;
         visuals = {
@@ -110,7 +111,7 @@ in
         };
         git = {
           enable = true;
-          gitsigns.enable = false;
+          gitsigns.enable = true;
         };
         nnoremap = {
           "<leader>mc" = "<cmd>lua require('telescope').extensions.metals.commands()<CR>";
