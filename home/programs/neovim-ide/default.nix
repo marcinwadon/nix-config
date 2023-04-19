@@ -77,10 +77,11 @@ in
         filetree.nvimTreeLua = {
           enable = true;
           hideDotFiles = false;
-          hideFiles = [ "node_modules" ".cache" ];
+          hideFiles = [ "node_modules" ".cache" ".DS_Store" ];
           openOnSetup = false;
         };
         neoclip.enable = true;
+        dial.enable = true;
         hop.enable = true;
         notifications.enable = true;
         todo.enable = true;
@@ -108,8 +109,8 @@ in
           enable = true;
         };
         markdown = {
-          enable = true;
-          glow.enable = true;
+          enable = false;
+          glow.enable = false;
         };
         git = {
           enable = true;

@@ -48,7 +48,7 @@ in
     extraOptions = ''
       keep-outputs = true
       keep-derivations = true
-      experimental-features = nix-command flakes
+      experimental-features = nix-command flakes ca-derivations
     '';
 
     settings = {
