@@ -67,6 +67,7 @@ in
       "*hie.yaml"
       "*.mill-version"
       "*.jvmopts"
+      ".DS_Store"
     ];
     signing = {
       key = "1CE2B7354FC6ED5D9DE12DF664C16DED80CCEABA";
