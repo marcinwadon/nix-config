@@ -7,6 +7,18 @@ let
     inherit fish-bobthefish-theme;
   };
 
+  neovimOverlay = 
+    import (
+      let
+        rev = "c57746e2b9e3b42c0be9d9fd1d765f245c3827b7";
+      in
+      builtins.fetchTarball {
+        url = "https://github.com/nix-community/neovim-nightly-overlay/archive/${rev}.tar.gz";
+        sha256 = "0xp4hm5hjg1vpkjz9p3i1j13jd71snkw270gi3jwwbcid86z398a";
+      }
+    );
+  
+
   pkgs = { darwin }: import nixpkgs {
     system = if darwin then "aarch64-darwin" else "x86_64-linux";
 
@@ -16,6 +28,7 @@ let
       fishOverlay
       nurpkgs.overlay
       neovim-flake.overlays.${if darwin then "aarch64-darwin" else "x86_64-linux"}.default
+      neovimOverlay
     ];
   };
 
