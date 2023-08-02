@@ -2,7 +2,7 @@
   description = "my nixos config";
 
   inputs = {
-    #nixpkgs.url = "nixpkgs/23.05-pre";
+    #nixpkgs.url = "nixpkgs/23.05";
     nixpkgs.url = "nixpkgs/nixos-unstable";
 
     darwin = {
@@ -39,11 +39,11 @@
         import ./outputs/nixos-conf.nix {
           inherit inputs;
         }
-        );
-        darwinConfigurations = (
-          import ./outputs/darwin-conf.nix {
-            inherit inputs;
-          }
-          );
+      );
+      darwinConfigurations = (
+        import ./outputs/darwin-conf.nix {
+          inherit inputs;
+        }
+      );
     };
 }
