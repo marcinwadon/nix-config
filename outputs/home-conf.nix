@@ -57,4 +57,5 @@ in
 {
   marcin-nixos = mkHome { darwin = false; };
   marcin-macos = mkHome { darwin = true; };
+  marcinwadon = mkHome { darwin = true; };
 }
