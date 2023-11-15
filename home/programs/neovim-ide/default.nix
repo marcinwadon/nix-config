@@ -21,7 +21,7 @@ in
           vim-mergetool
           vim-repeat
         ];
-        neovim.package = pkgs.neovim-nightly;
+        #neovim.package = pkgs.neovim-nightly;
         lsp = {
           enable = true;
           folds = true;
@@ -49,7 +49,7 @@ in
           nvimWebDevicons.enable = true;
           lspkind.enable = true;
           indentBlankline = {
-            enable = true;
+            enable = false;
             fillChar = "";
             eolChar = "";
             showCurrContext = true;

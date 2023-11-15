@@ -12,7 +12,7 @@ let
     cachix
     dig
     duf
-    exa
+    eza
     fd
     gh
     killall

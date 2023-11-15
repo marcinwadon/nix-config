@@ -57,11 +57,11 @@ in
       dcd  = "docker-compose down --remove-orphans";
       drm  = "docker images -a -q | xargs docker rmi -f";
       du   = "ncdu --color dark -rr -x";
-      ls   = "exa";
+      ls   = "eza";
       ll   = "ls -a";
       ".." = "cd ..";
       ping = "prettyping";
-      tree = "exa -T";
+      tree = "eza -T";
       flush = "dscacheutil -flushcache && killall -HUP mDNSResponder";
       cleanup = "find . -type f -name '*.DS_Store' -ls -delete";
       gpg-restart = "gpg-connect-agent updatestartuptty /bye";
