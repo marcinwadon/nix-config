@@ -21,7 +21,7 @@ in
           vim-mergetool
           vim-repeat
         ];
-        #neovim.package = pkgs.neovim-nightly;
+        neovim.package = pkgs.neovim-nightly;
         lsp = {
           enable = true;
           folds = true;
@@ -42,10 +42,12 @@ in
           ts = true;
           smithy.enable = true;
           go = true;
+          python = true;
         };
         plantuml.enable = true;
         visuals = {
           enable = true;
+          noice.enable = true;
           nvimWebDevicons.enable = true;
           lspkind.enable = true;
           indentBlankline = {
@@ -79,10 +81,12 @@ in
         };
         neoclip.enable = true;
         dial.enable = true;
+        harpoon.enable = true;
         hop.enable = true;
         notifications.enable = true;
         todo.enable = true;
         tabline.nvimBufferline.enable = true;
+        zen.enable = true;
         treesitter = {
           enable = true;
           autotagHtml = true;
@@ -104,6 +108,7 @@ in
         };
         telescope = {
           enable = true;
+          tabs.enable = true;
         };
         markdown = {
           enable = false;
@@ -112,6 +117,7 @@ in
         git = {
           enable = true;
           gitsigns.enable = true;
+          neogit.enable = true;
         };
         spider = {
           enable = true;
@@ -124,6 +130,9 @@ in
         nnoremap = {
           "<leader>mc" = "<cmd>lua require('telescope').extensions.metals.commands()<CR>";
           "<leader><leader>o" = "<cmd>lua require('metals').organize_imports()<CR>";
+          "<leader><leader>i" = "<cmd>!black %<CR>";
+          "<leader><leader>u" = "<cmd>!isort %<CR>";
+          "<leader><leader>y" = "<cmd>!autoflake -r --in-place --remove-unused-variables %<CR>";
         };
       };
     };
