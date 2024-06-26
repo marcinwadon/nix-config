@@ -42,7 +42,7 @@ in
           ts = true;
           smithy.enable = true;
           go = true;
-          python = true;
+          #python = true;
         };
         plantuml.enable = true;
         visuals = {

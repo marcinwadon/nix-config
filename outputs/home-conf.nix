@@ -7,7 +7,7 @@ let
     inherit fish-bobthefish-theme;
   };
 
-  neovimOverlay = 
+  neovimOverlay =
     import (
       let
         rev = "c57746e2b9e3b42c0be9d9fd1d765f245c3827b7";
@@ -17,7 +17,7 @@ let
         sha256 = "0xp4hm5hjg1vpkjz9p3i1j13jd71snkw270gi3jwwbcid86z398a";
       }
     );
-  
+
 
   pkgs = { darwin }: import nixpkgs {
     system = if darwin then "aarch64-darwin" else "x86_64-linux";
@@ -37,10 +37,14 @@ let
     nurpkgs = pkgs;
   };
 
-  imports = { darwin }: [
-    neovim-flake.nixosModules.${if darwin then "aarch64-darwin" else "x86_64-linux"}.hm
-    ../home/home.nix
-  ];
+  imports = { darwin }:
+    let
+      system = if darwin then "aarch64-darwin" else "x86_64-linux";
+    in
+    [
+      neovim-flake.homeManagerModules.${system}.default
+      ../home/home.nix
+    ];
 
   mkHome = { darwin ? false }: (
     home-manager.lib.homeManagerConfiguration {
