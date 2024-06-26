@@ -1,65 +1,72 @@
-{ inputs, ... }:
-
-with inputs;
-
-let
+{inputs, ...}:
+with inputs; let
   fishOverlay = f: p: {
     inherit fish-bobthefish-theme;
   };
 
-  neovimOverlay =
-    import (
-      let
-        rev = "c57746e2b9e3b42c0be9d9fd1d765f245c3827b7";
-      in
+  neovimOverlay = import (
+    let
+      rev = "c57746e2b9e3b42c0be9d9fd1d765f245c3827b7";
+    in
       builtins.fetchTarball {
         url = "https://github.com/nix-community/neovim-nightly-overlay/archive/${rev}.tar.gz";
         sha256 = "0xp4hm5hjg1vpkjz9p3i1j13jd71snkw270gi3jwwbcid86z398a";
       }
-    );
+  );
 
+  pkgs = {darwin}:
+    import nixpkgs {
+      system =
+        if darwin
+        then "aarch64-darwin"
+        else "x86_64-linux";
 
-  pkgs = { darwin }: import nixpkgs {
-    system = if darwin then "aarch64-darwin" else "x86_64-linux";
+      config.allowUnfree = true;
 
-    config.allowUnfree = true;
+      overlays = [
+        fishOverlay
+        nurpkgs.overlay
+        neovim-flake
+        .overlays
+        .${
+          if darwin
+          then "aarch64-darwin"
+          else "x86_64-linux"
+        }
+        .default
+        neovimOverlay
+      ];
+    };
 
-    overlays = [
-      fishOverlay
-      nurpkgs.overlay
-      neovim-flake.overlays.${if darwin then "aarch64-darwin" else "x86_64-linux"}.default
-      neovimOverlay
-    ];
-  };
+  nur = {darwin}:
+    import nurpkgs {
+      inherit pkgs;
+      nurpkgs = pkgs;
+    };
 
-  nur = { darwin }: import nurpkgs {
-    inherit pkgs;
-    nurpkgs = pkgs;
-  };
+  imports = {darwin}: let
+    system =
+      if darwin
+      then "aarch64-darwin"
+      else "x86_64-linux";
+  in [
+    neovim-flake.homeManagerModules.${system}.default
+    ../home/home.nix
+  ];
 
-  imports = { darwin }:
-    let
-      system = if darwin then "aarch64-darwin" else "x86_64-linux";
-    in
-    [
-      neovim-flake.homeManagerModules.${system}.default
-      ../home/home.nix
-    ];
-
-  mkHome = { darwin ? false }: (
+  mkHome = {darwin ? false}: (
     home-manager.lib.homeManagerConfiguration {
-      pkgs = pkgs { inherit darwin; };
+      pkgs = pkgs {inherit darwin;};
 
       extraSpecialArgs = {
         inherit darwin;
       };
 
-      modules = [{ imports = imports { inherit darwin; }; }];
+      modules = [{imports = imports {inherit darwin;};}];
     }
   );
-in
-{
-  marcin-nixos = mkHome { darwin = false; };
-  marcin-macos = mkHome { darwin = true; };
-  marcinwadon = mkHome { darwin = true; };
+in {
+  marcin-nixos = mkHome {darwin = false;};
+  marcin-macos = mkHome {darwin = true;};
+  marcinwadon = mkHome {darwin = true;};
 }

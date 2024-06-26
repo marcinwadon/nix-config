@@ -1,11 +1,23 @@
-{ config, lib, pkgs, stdenv, darwin, ... }:
-
-let
-  username = if darwin then "marcinwadon" else "marcin";
-  homeDirectory = if darwin then "/Users/${username}" else "/home/${username}";
+{
+  config,
+  lib,
+  pkgs,
+  stdenv,
+  darwin,
+  ...
+}: let
+  username =
+    if darwin
+    then "marcinwadon"
+    else "marcin";
+  homeDirectory =
+    if darwin
+    then "/Users/${username}"
+    else "/home/${username}";
   configHome = "${homeDirectory}/.config";
 
   defaultPkgs = with pkgs; [
+    alejandra
     any-nix-shell
     asciinema
     bottom
@@ -26,8 +38,7 @@ let
     tldr
     tree
   ];
-in
-{
+in {
   programs.home-manager.enable = true;
 
   imports = builtins.concatMap import [

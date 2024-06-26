@@ -1,11 +1,13 @@
-{ config, lib, pkgs, ... }:
-
-let
-  metals = pkgs.callPackage ./metals.nix { };
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}: let
+  metals = pkgs.callPackage ./metals.nix {};
 
   openaiApiKey = import ../../secrets/openaiApiKey;
-in
-{
+in {
   programs.neovim-ide = {
     enable = true;
     settings = {
@@ -76,7 +78,7 @@ in
         filetree.nvimTreeLua = {
           enable = true;
           hideDotFiles = false;
-          hideFiles = [ "node_modules" ".cache" ".DS_Store" ];
+          hideFiles = ["node_modules" ".cache" ".DS_Store"];
           openOnSetup = false;
         };
         neoclip.enable = true;

@@ -1,6 +1,4 @@
-{ pkgs, ...}:
-
-let
+{pkgs, ...}: let
   tmux = "${pkgs.tmux}/bin/tmux";
 in
   pkgs.writeShellScriptBin "tmux-sessions" ''

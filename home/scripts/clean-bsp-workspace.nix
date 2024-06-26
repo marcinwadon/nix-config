@@ -1,5 +1,4 @@
-{ pkgs, ... }:
-
+{pkgs, ...}:
 pkgs.writeShellScriptBin "clean-bsp-workspace" ''
   rm -rf $PWD/.bloop/
   rm -rf $PWD/.metals/
@@ -13,4 +12,3 @@ pkgs.writeShellScriptBin "clean-bsp-workspace" ''
   rm -rf $PWD/out/
   rm -f $PWD/project/metals.sbt
 ''
-

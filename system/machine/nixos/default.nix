@@ -1,6 +1,8 @@
-{ config, pkgs, ... }:
-
 {
+  config,
+  pkgs,
+  ...
+}: {
   imports = [
     <nixpkgs/nixos/modules/virtualisation/lxc-container.nix>
     ./hardware-configuration.nix
@@ -22,6 +24,6 @@
     ];
 
     defaultGateway = "10.0.1.1";
-    nameservers = [ "10.0.1.1" ];
+    nameservers = ["10.0.1.1"];
   };
 }

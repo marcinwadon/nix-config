@@ -28,22 +28,21 @@
     };
   };
 
-  outputs = inputs:
-    {
-      homeConfigurations = (
-        import ./outputs/home-conf.nix {
-          inherit inputs;
-        }
-      );
-      nixosConfigurations = (
-        import ./outputs/nixos-conf.nix {
-          inherit inputs;
-        }
-      );
-      darwinConfigurations = (
-        import ./outputs/darwin-conf.nix {
-          inherit inputs;
-        }
-      );
-    };
+  outputs = inputs: {
+    homeConfigurations = (
+      import ./outputs/home-conf.nix {
+        inherit inputs;
+      }
+    );
+    nixosConfigurations = (
+      import ./outputs/nixos-conf.nix {
+        inherit inputs;
+      }
+    );
+    darwinConfigurations = (
+      import ./outputs/darwin-conf.nix {
+        inherit inputs;
+      }
+    );
+  };
 }

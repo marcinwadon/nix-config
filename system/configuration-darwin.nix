@@ -1,11 +1,18 @@
-{ config, lib, pkgs, inputs, ... }:
-
-let
-
-in
 {
+  config,
+  lib,
+  pkgs,
+  inputs,
+  ...
+}: let
+in {
   environment.systemPackages = with pkgs; [
-    vim wget fish yubikey-manager yubikey-personalization gnupg
+    vim
+    wget
+    fish
+    yubikey-manager
+    yubikey-personalization
+    gnupg
   ];
 
   programs.fish.enable = true;
@@ -39,7 +46,10 @@ in
   nix = {
     gc = {
       automatic = true;
-      interval = { Hour = 3; Minute = 15; };
+      interval = {
+        Hour = 3;
+        Minute = 15;
+      };
       options = "--delete-older-than 7d";
     };
 

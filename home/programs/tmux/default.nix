@@ -1,11 +1,12 @@
-{ config, pkgs, ... }:
-
-let
+{
+  config,
+  pkgs,
+  ...
+}: let
   plugins = pkgs.tmuxPlugins // pkgs.callPackage ./custom-plugins.nix {};
   tmuxConf = builtins.readFile ./default.conf;
   tmux-sessions = pkgs.callPackage ./tmux-sessions.nix {};
-in
-{
+in {
   programs.tmux = {
     enable = true;
     #agressiveResize = true;
