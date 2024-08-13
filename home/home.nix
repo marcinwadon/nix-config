@@ -33,7 +33,6 @@
     nyancat
     nix-index
     nix-output-monitor
-    nix-search
     prettyping
     ripgrep
     tldr
