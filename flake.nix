@@ -26,6 +26,11 @@
       url = github:gvolpe/theme-bobthefish;
       flake = false;
     };
+
+    nix-search = {
+      url = github:diamondburned/nix-search;
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = inputs: {

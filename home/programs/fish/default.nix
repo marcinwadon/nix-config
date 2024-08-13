@@ -65,6 +65,7 @@ in {
       du = "ncdu --color dark -rr -x";
       ls = "eza";
       ll = "ls -a";
+      ns = "nix-search";
       ".." = "cd ..";
       ping = "prettyping";
       tree = "eza -T";

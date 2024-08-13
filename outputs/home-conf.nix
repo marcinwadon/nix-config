@@ -4,6 +4,10 @@ with inputs; let
     inherit fish-bobthefish-theme;
   };
 
+  nixSearchOverlay = {system}: f: p: {
+    nix-search = nix-search.packages.${system}.default;
+  };
+
   neovimOverlay = import (
     let
       rev = "c57746e2b9e3b42c0be9d9fd1d765f245c3827b7";
@@ -35,6 +39,7 @@ with inputs; let
         }
         .default
         neovimOverlay
+        nixSearchOverlay.${system}
       ];
     };
 
