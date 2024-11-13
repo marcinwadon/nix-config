@@ -1,5 +1,5 @@
 let
-  more = {pkgs, ...}: {
+  more = { pkgs, ... }: {
     programs = {
       bat.enable = true;
 
@@ -17,7 +17,7 @@ let
         enable = true;
         enableFishIntegration = true;
         defaultCommand = "fd --type file --follow";
-        defaultOptions = ["--height 20%"];
+        defaultOptions = [ "--height 20%" ];
         fileWidgetCommand = "fd --type file --follow";
       };
 
@@ -51,7 +51,8 @@ let
       };
     };
   };
-in [
+in
+[
   ./git
   ./fish
   ./tmux

@@ -1,13 +1,14 @@
-{
-  config,
-  lib,
-  pkgs,
-  ...
-}: let
-  metals = pkgs.callPackage ./metals.nix {};
+{ config
+, lib
+, pkgs
+, ...
+}:
+let
+  metals = pkgs.callPackage ./metals.nix { };
 
   openaiApiKey = import ../../secrets/openaiApiKey;
-in {
+in
+{
   programs.neovim-ide = {
     enable = true;
     settings = {
@@ -44,6 +45,7 @@ in {
           ts = true;
           smithy.enable = true;
           go = true;
+          rust.enable = true;
           #python = true;
         };
         plantuml.enable = true;
@@ -78,7 +80,7 @@ in {
         filetree.nvimTreeLua = {
           enable = true;
           hideDotFiles = false;
-          hideFiles = ["node_modules" ".cache" ".DS_Store"];
+          hideFiles = [ "node_modules" ".cache" ".DS_Store" ];
           openOnSetup = false;
         };
         neoclip.enable = true;
@@ -86,6 +88,11 @@ in {
         harpoon.enable = true;
         hop.enable = true;
         notifications.enable = true;
+        snippets.vsnip.enable = true;
+        tide = {
+          enable = true;
+          keys.splits.vertical = "~";
+        };
         todo.enable = true;
         tabline.nvimBufferline.enable = true;
         zen.enable = true;
