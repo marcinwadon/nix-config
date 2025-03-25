@@ -23,6 +23,10 @@
     gpgconf --launch gpg-agent
   '';
 
+  githubConfig = ''
+    set -x GITHUB_TOKEN ${import ../../secrets/github}
+  '';
+
   custom = pkgs.callPackage ./plugins.nix {};
 
   fenv = {
@@ -47,7 +51,8 @@
     ''
     + gpgConfig
     + fzfConfig
-    + themeConfig;
+    + themeConfig
+    + githubConfig;
 in {
   programs.fish = {
     enable = true;
