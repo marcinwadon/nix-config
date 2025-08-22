@@ -6,7 +6,8 @@
       "Bash(nix:*)",
       "Bash(darwin-rebuild:*)",
       "WebSearch",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "WebFetch(domain:docs.anthropic.com)"
     ],
     "deny": [],
     "ask": []
