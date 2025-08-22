@@ -39,11 +39,11 @@
         inherit inputs;
       }
     );
-    nixosConfigurations = (
-      import ./outputs/nixos-conf.nix {
-        inherit inputs;
-      }
-    );
+    # nixosConfigurations = (
+    #   import ./outputs/nixos-conf.nix {
+    #     inherit inputs;
+    #   }
+    # );
     darwinConfigurations = (
       import ./outputs/darwin-conf.nix {
         inherit inputs;
