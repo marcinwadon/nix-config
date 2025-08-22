@@ -35,23 +35,48 @@
       url = github:diamondburned/nix-search;
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    neovim-nightly-overlay = {
+      url = github:nix-community/neovim-nightly-overlay;
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = inputs: {
+  outputs = inputs: let
+    system = "aarch64-darwin";
+    pkgs = inputs.nixpkgs.legacyPackages.${system};
+  in {
     homeConfigurations = (
       import ./outputs/home-conf.nix {
         inherit inputs;
       }
     );
-    # nixosConfigurations = (
-    #   import ./outputs/nixos-conf.nix {
-    #     inherit inputs;
-    #   }
-    # );
+    
     darwinConfigurations = (
       import ./outputs/darwin-conf.nix {
         inherit inputs;
       }
     );
+
+    formatter.${system} = pkgs.alejandra;
+
+    devShells.${system} = {
+      default = pkgs.mkShell {
+        buildInputs = with pkgs; [
+          nix
+          home-manager
+          git
+          alejandra
+        ];
+        shellHook = ''
+          echo "Nix development environment loaded"
+          echo "Available commands:"
+          echo "  ./switch home   - rebuild home configuration"
+          echo "  ./switch darwin - rebuild system configuration"
+          echo "  nix flake update - update flake inputs"
+          echo "  nix flake check  - check flake for issues"
+        '';
+      };
+    };
   };
 }

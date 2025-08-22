@@ -2,13 +2,8 @@
 
 set +x
 
-rebuild_home_macos() {
-  nix build .#homeConfigurations.marcin-macos.activationPackage
-  activateHM
-}
-
-rebuild_home_nixos() {
-  nix build .#homeConfigurations.marcin-nixos.activationPackage
+rebuild_home() {
+  nix build .#homeConfigurations.marcinwadon.activationPackage
   activateHM
 }
 
@@ -18,12 +13,15 @@ activateHM() {
 }
 
 case $1 in
-  "macos")
-    rebuild_home_macos;;
-  "nixos")
-    rebuild_home_nixos;;
+  "home")
+    rebuild_home;;
+  "darwin")
+    darwin-rebuild switch --flake .;;
   "update-fish")
     fish -c fish_update_completions;;
   *)
-    echo "expected 'macos', 'nixos' or 'update-fish'";;
+    echo "Usage: $0 {home|darwin|update-fish}"
+    echo "  home      - rebuild home-manager configuration"
+    echo "  darwin    - rebuild darwin system configuration" 
+    echo "  update-fish - update fish completions";;
 esac

@@ -1,7 +1,7 @@
 {inputs, ...}: let
   darwinSystem = inputs.darwin.lib.darwinSystem;
 in {
-  macos = darwinSystem {
+  studio = darwinSystem {
     system = "aarch64-darwin";
     specialArgs = {inherit inputs;};
     modules = [

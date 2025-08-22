@@ -4,8 +4,7 @@
   pkgs,
   inputs,
   ...
-}: let
-in {
+}: {
   environment.systemPackages = with pkgs; [
     vim
     wget
@@ -28,18 +27,28 @@ in {
 
   nixpkgs.config.allowUnfree = true;
 
-  services.nix-daemon.enable = true;
+  # Set primary user for system defaults
+  system.primaryUser = "marcinwadon";
 
   system.defaults = {
     dock = {
       autohide = true;
       showhidden = true;
       mru-spaces = false;
+      minimize-to-application = true;
+      show-recents = false;
     };
     finder = {
       AppleShowAllExtensions = true;
       QuitMenuItem = true;
       FXEnableExtensionChangeWarning = true;
+      ShowPathbar = true;
+      ShowStatusBar = true;
+    };
+    NSGlobalDomain = {
+      AppleShowScrollBars = "Always";
+      InitialKeyRepeat = 14;
+      KeyRepeat = 1;
     };
   };
 
@@ -55,16 +64,21 @@ in {
 
     registry.nixpkgs.flake = inputs.nixpkgs;
 
+    optimise.automatic = true;
+
+    settings = {
+      experimental-features = ["nix-command" "flakes"];
+      warn-dirty = false;
+      trusted-users = ["root" "marcinwadon"];
+    };
+
     extraOptions = ''
       keep-outputs = true
       keep-derivations = true
-      experimental-features = nix-command flakes ca-derivations
     '';
-
-    settings = {
-      auto-optimise-store = true;
-    };
   };
+
+  ids.gids.nixbld = 350;
 
   system.stateVersion = 4;
 }

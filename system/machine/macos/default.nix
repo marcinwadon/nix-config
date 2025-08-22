@@ -1,4 +1,3 @@
 {pkgs, ...}: {
-  services.nix-daemon.enable = true;
-  #services.nix-daemon.package = pkgs.nixFlakes;
+  # nix-daemon is now managed automatically by nix-darwin when nix.enable is on
 }

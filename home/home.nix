@@ -6,14 +6,8 @@
   darwin,
   ...
 }: let
-  username =
-    if darwin
-    then "marcinwadon"
-    else "marcin";
-  homeDirectory =
-    if darwin
-    then "/Users/${username}"
-    else "/home/${username}";
+  username = "marcinwadon";
+  homeDirectory = "/Users/${username}";
   configHome = "${homeDirectory}/.config";
 
   defaultPkgs = with pkgs; [
@@ -49,7 +43,7 @@ in {
 
   home = {
     inherit username homeDirectory;
-    stateVersion = "23.05";
+    stateVersion = "24.11";
 
     packages = defaultPkgs;
 
