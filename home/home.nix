@@ -22,6 +22,7 @@
     asciinema
     bottom
     cachix
+    claude-code
     dig
     duf
     eza
