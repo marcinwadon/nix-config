@@ -2,15 +2,19 @@
   description = "my nixos config";
 
   inputs = {
-    nixpkgs.url = "nixpkgs/24.05";
-    #nixpkgs.url = "nixpkgs/nixos-unstable";
+    #nixpkgs.url = "nixpkgs/24.05";
+    nixpkgs.url = "nixpkgs/nixos-unstable";
+    #nixpkgs.url = "git+https://github.com/NixOS/nixpkgs?shallow=1&ref=nixos-unstable";
 
     darwin = {
       url = github:LnL7/nix-darwin;
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    nurpkgs.url = github:nix-community/NUR;
+    nurpkgs = {
+      url = github:nix-community/NUR;
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
 
     home-manager = {
       url = github:nix-community/home-manager;

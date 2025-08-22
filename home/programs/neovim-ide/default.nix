@@ -24,7 +24,7 @@ in
           vim-mergetool
           vim-repeat
         ];
-        neovim.package = pkgs.neovim-nightly;
+        # neovim.package = pkgs.neovim;
         lsp = {
           enable = true;
           folds = true;
@@ -39,7 +39,6 @@ in
             type = "nil";
           };
           scala = {
-            inherit metals;
             enable = true;
           };
           ts = true;
@@ -89,6 +88,7 @@ in
         hop.enable = true;
         notifications.enable = true;
         snippets.vsnip.enable = true;
+        snacks.enable = false;
         tide = {
           enable = true;
           keys.splits.vertical = "~";
