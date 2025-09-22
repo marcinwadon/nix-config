@@ -19,9 +19,12 @@ case $1 in
     darwin-rebuild switch --flake .;;
   "update-fish")
     fish -c fish_update_completions;;
+  "update-flakes")
+    nix flake update;;
   *)
-    echo "Usage: $0 {home|darwin|update-fish}"
-    echo "  home      - rebuild home-manager configuration"
-    echo "  darwin    - rebuild darwin system configuration" 
-    echo "  update-fish - update fish completions";;
+    echo "Usage: $0 {home|darwin|update-fish|update-flakes}"
+    echo "  home        - rebuild home-manager configuration"
+    echo "  darwin      - rebuild darwin system configuration"
+    echo "  update-fish - update fish completions"
+    echo "  update-flakes - update all flake inputs";;
 esac
