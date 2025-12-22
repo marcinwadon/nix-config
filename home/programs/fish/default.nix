@@ -82,6 +82,37 @@ in {
     shellInit = fishConfig;
     functions = {
       join = "ssh -o StrictHostKeyChecking=false admin@$argv";
+
+      # Aikido safe-chain command wrapper
+      wrapSafeChainCommand = ''
+        set -l original_cmd $argv[1]
+        set -l aikido_cmd $argv[2]
+        set -l cmd_args $argv[3..-1]
+
+        if command -v $aikido_cmd > /dev/null 2>&1
+          command $aikido_cmd $cmd_args
+        else
+          echo "⚠️  Aikido safe-chain not found for $original_cmd"
+          command $original_cmd $cmd_args
+        end
+      '';
+
+      # Aikido safe-chain wrappers
+      pnpm = ''
+        if test "$argv[1]" = "-v" -o "$argv[1]" = "--version"
+          command pnpm $argv
+          return
+        end
+        wrapSafeChainCommand "pnpm" "aikido-pnpm" $argv
+      '';
+
+      npm = ''
+        if test "$argv[1]" = "-v" -o "$argv[1]" = "--version"
+          command npm $argv
+          return
+        end
+        wrapSafeChainCommand "npm" "aikido-npm" $argv
+      '';
     };
   };
 

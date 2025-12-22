@@ -133,12 +133,12 @@ in
           skipInsignificantPunctuation = true;
         };
         chatgpt = {
-          enable = true;
-          inherit openaiApiKey;
+          enable = false;
         };
         nnoremap = {
           "<leader>mc" = "<cmd>lua require('telescope').extensions.metals.commands()<CR>";
           "<leader><leader>o" = "<cmd>lua require('metals').organize_imports()<CR>";
+          "<leader><leader>f" = "<cmd>!prettier -w %<CR>";
           "<leader><leader>i" = "<cmd>!black %<CR>";
           "<leader><leader>u" = "<cmd>!isort %<CR>";
           "<leader><leader>y" = "<cmd>!autoflake -r --in-place --remove-unused-variables %<CR>";

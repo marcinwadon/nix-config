@@ -3,6 +3,8 @@
   pkgs,
   ...
 }: let
+  parloaSecrets = import ../../secrets/parloa.nix;
+
   gitConfig = {
     core = {
       editor = "nvim";
@@ -23,40 +25,52 @@
       "https://github.com/".insteadOf = "gh:";
       "ssh://git@github.com".pushInsteadOf = "gh:";
     };
-    github = {
-      token = import ../../secrets/github;
-      user = "marcinwadon";
-    };
   };
 
   rg = "${pkgs.ripgrep}/bin/rg";
 in {
-  home.packages = with pkgs.gitAndTools; [
+  home.packages = with pkgs; [
     diff-so-fancy
     git-crypt
     hub
     tig
   ];
 
+  # Copy Parloa-specific Git config to the right location
+  home.file.".config/git/parloa.gitconfig".text = parloaSecrets.gitConfig;
+
   programs.git = {
     enable = true;
-    aliases = {
-      amend = "commit --amend -m";
-      fixup = "!f(){ git reset --soft HEAD~\${1} && git commit --amend -C HEAD; };f";
-      loc = "!f(){ git ls-files | ${rg} \"\\.\${1}\" | xargs wc -l; };f";
-      br = "branch";
-      co = "checkout";
-      st = "status";
-      ls = "log --pretty=format:\"%C(yellow)%h%Cred%d\\\\ %Creset%s%Cblue\\\\ [%cn]\" --decorate";
-      ll = "log --pretty=format:\"%C(yellow)%h%Cred%d\\\\ %Creset%s%Cblue\\\\ [%cn]\" --decorate --numstat";
-      cm = "commit -m";
-      ca = "commit -am";
-      dc = "diff --cached";
-      lg = "log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative";
-      amm = "commit --amend";
-      mr = "merge --ff-only";
+    settings = gitConfig // {
+      alias = {
+        amend = "commit --amend -m";
+        fixup = "!f(){ git reset --soft HEAD~\${1} && git commit --amend -C HEAD; };f";
+        loc = "!f(){ git ls-files | ${rg} \"\\.\${1}\" | xargs wc -l; };f";
+        br = "branch";
+        co = "checkout";
+        st = "status";
+        ls = "log --pretty=format:\"%C(yellow)%h%Cred%d\\\\ %Creset%s%Cblue\\\\ [%cn]\" --decorate";
+        ll = "log --pretty=format:\"%C(yellow)%h%Cred%d\\\\ %Creset%s%Cblue\\\\ [%cn]\" --decorate --numstat";
+        cm = "commit -m";
+        ca = "commit -am";
+        dc = "diff --cached";
+        lg = "log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative";
+        amm = "commit --amend";
+        mr = "merge --ff-only";
+      };
+      user = {
+        email = "mwadon@evojam.com";
+        name = "Marcin Wadon";
+      };
+      commit.gpgsign = true;
+      user.signingkey = "23E5A318AE8D2861";
     };
-    extraConfig = gitConfig;
+    includes = [
+      {
+        condition = "gitdir:${parloaSecrets.projectPath}";
+        path = "~/.config/git/parloa.gitconfig";
+      }
+    ];
     ignores = [
       "*.bloop"
       "*.bsp"
@@ -70,11 +84,5 @@ in {
       "*.jvmopts"
       ".DS_Store"
     ];
-    signing = {
-      key = "1CE2B7354FC6ED5D9DE12DF664C16DED80CCEABA";
-      signByDefault = true;
-    };
-    userEmail = "mwadon@evojam.com";
-    userName = "Marcin Wadon";
   };
 }

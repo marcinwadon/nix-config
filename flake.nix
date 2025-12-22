@@ -6,6 +6,9 @@
     nixpkgs.url = "nixpkgs/nixos-unstable";
     #nixpkgs.url = "git+https://github.com/NixOS/nixpkgs?shallow=1&ref=nixos-unstable";
 
+    # Stable nixpkgs for packages that break on unstable
+    nixpkgs-stable.url = "nixpkgs/nixos-24.05";
+
     darwin = {
       url = github:LnL7/nix-darwin;
       inputs.nixpkgs.follows = "nixpkgs";
@@ -38,6 +41,11 @@
 
     neovim-nightly-overlay = {
       url = github:nix-community/neovim-nightly-overlay;
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    claude-code = {
+      url = "github:sadjow/claude-code-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };

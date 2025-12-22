@@ -49,6 +49,7 @@ in {
 
     sessionVariables = {
       EDITOR = "nvim";
+      GITHUB_TOKEN = import ./secrets/github;
     };
   };
 }
