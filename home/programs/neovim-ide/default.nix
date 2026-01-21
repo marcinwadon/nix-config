@@ -7,8 +7,22 @@ let
   metals = pkgs.callPackage ./metals.nix { };
 
   openaiApiKey = import ../../secrets/openaiApiKey;
+
+  agentic-nvim = pkgs.vimUtils.buildVimPlugin {
+    pname = "agentic-nvim";
+    version = "2026-01-19";
+    src = pkgs.fetchFromGitHub {
+      owner = "carlos-algms";
+      repo = "agentic.nvim";
+      rev = "d3fecdba3fb685f0b7a35ac16c3c50d11882a28d";
+      hash = "sha256-HMBVkJg9B7PT0tjXdms+knhfqrh01NVxXnSusvB4qiI=";
+    };
+    nvimRequireCheck = "agentic";
+  };
 in
 {
+  home.packages = [ pkgs.claude-code-acp ];
+
   programs.neovim-ide = {
     enable = true;
     settings = {
@@ -24,6 +38,12 @@ in
           vim-mergetool
           vim-repeat
         ];
+        startPlugins = [ agentic-nvim ];
+        luaConfigRC = ''
+          require("agentic").setup({
+            provider = "claude-acp",
+          })
+        '';
         # neovim.package = pkgs.neovim;
         lsp = {
           enable = true;
@@ -142,6 +162,9 @@ in
           "<leader><leader>i" = "<cmd>!black %<CR>";
           "<leader><leader>u" = "<cmd>!isort %<CR>";
           "<leader><leader>y" = "<cmd>!autoflake -r --in-place --remove-unused-variables %<CR>";
+          # agentic.nvim keymaps
+          "<C-\\>" = "<cmd>lua require('agentic').toggle()<CR>";
+          "<C-'>" = "<cmd>lua require('agentic').add_selection_or_file_to_context()<CR>";
         };
       };
     };

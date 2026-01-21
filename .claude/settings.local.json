@@ -12,7 +12,11 @@
       "Bash(git config:*)",
       "WebFetch(domain:github.com)",
       "WebFetch(domain:raw.githubusercontent.com)",
-      "WebFetch(domain:gvolpe.com)"
+      "WebFetch(domain:gvolpe.com)",
+      "Bash(nix-prefetch-git:*)",
+      "WebFetch(domain:www.npmjs.com)",
+      "Bash(./switch:*)",
+      "Bash(tree:*)"
     ],
     "deny": [],
     "ask": []
