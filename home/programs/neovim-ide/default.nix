@@ -19,6 +19,25 @@ let
     };
     nvimRequireCheck = "agentic";
   };
+
+  nvim-highlight-colors = pkgs.vimUtils.buildVimPlugin {
+    pname = "nvim-highlight-colors";
+    version = "2025-09-06";
+    src = pkgs.fetchFromGitHub {
+      owner = "brenoprata10";
+      repo = "nvim-highlight-colors";
+      rev = "e0c4a58ec8c3ca7c92d3ee4eb3bc1dd0f7be317e";
+      hash = "sha256-BIcOU2Gie90wujQFZ+aD3wYTRegSKw4CBxC95DRwo9I=";
+    };
+    nvimRequireCheck = "nvim-highlight-colors";
+    nvimSkipModule = [
+      "nvim-highlight-colors.color.patterns_spec"
+      "nvim-highlight-colors.color.converters_spec"
+      "nvim-highlight-colors.color.utils_spec"
+      "nvim-highlight-colors.buffer_utils_spec"
+      "nvim-highlight-colors.utils_spec"
+    ];
+  };
 in
 {
   home.packages = [ pkgs.claude-code-acp ];
@@ -37,12 +56,59 @@ in
           multiple-cursors
           vim-mergetool
           vim-repeat
+          conform-nvim
         ];
-        startPlugins = [ agentic-nvim ];
+        startPlugins = [ agentic-nvim nvim-highlight-colors ];
         luaConfigRC = ''
           require("agentic").setup({
             provider = "claude-acp",
           })
+
+          -- nvim-highlight-colors: show actual colors inline for hex/rgb values
+          require("nvim-highlight-colors").setup({
+            render = "background", -- or "foreground" or "virtual"
+            enable_named_colors = true,
+            enable_tailwind = true,
+          })
+
+          -- conform.nvim: lightweight formatting
+          require("conform").setup({
+            formatters_by_ft = {
+              javascript = { "prettier" },
+              typescript = { "prettier" },
+              typescriptreact = { "prettier" },
+              javascriptreact = { "prettier" },
+              json = { "prettier" },
+              yaml = { "prettier" },
+              html = { "prettier" },
+              css = { "prettier" },
+              markdown = { "prettier" },
+              python = { "isort", "black" },
+              nix = { "alejandra" },
+              go = { "gofmt" },
+              rust = { "rustfmt" },
+            },
+            -- Set up format-on-save (optional, disabled by default to match your LSP setting)
+            -- format_on_save = {
+            --   timeout_ms = 500,
+            --   lsp_fallback = true,
+            -- },
+          })
+          -- Keymap for manual formatting with conform
+          vim.keymap.set({ "n", "v" }, "<leader>cf", function()
+            require("conform").format({ async = true, lsp_fallback = true })
+          end, { desc = "Format buffer (conform)" })
+
+          -- Set Visual highlight (visible blue)
+          local function set_visual_hl()
+            vim.api.nvim_set_hl(0, "Visual", { bg = "#3d59a1" })
+          end
+          vim.api.nvim_create_autocmd({"VimEnter", "ColorScheme"}, {
+            callback = function()
+              vim.schedule(set_visual_hl)
+            end,
+          })
+          set_visual_hl()
         '';
         # neovim.package = pkgs.neovim;
         lsp = {
@@ -70,11 +136,12 @@ in
         plantuml.enable = true;
         visuals = {
           enable = true;
+          modes.enable = false;  # disable modes.nvim - it interferes with Visual highlight
           noice.enable = true;
           nvimWebDevicons.enable = true;
           lspkind.enable = true;
           indentBlankline = {
-            enable = false;
+            enable = true;
             fillChar = "";
             eolChar = "";
             showCurrContext = true;
@@ -108,7 +175,7 @@ in
         hop.enable = true;
         notifications.enable = true;
         snippets.vsnip.enable = true;
-        snacks.enable = false;
+        snacks.enable = true;
         tide = {
           enable = true;
           keys.splits.vertical = "~";
