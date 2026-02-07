@@ -78,6 +78,7 @@ in {
       cleanup = "find . -type f -name '*.DS_Store' -ls -delete";
       gpg-restart = "gpg-connect-agent updatestartuptty /bye";
       gpg-reload = "gpg-connect-agent 'scd serialno' 'learn --force' /bye";
+      claudey = "claude --dangerously-skip-permissions";
     };
     shellInit = fishConfig;
     functions = {

@@ -16,7 +16,18 @@
       "Bash(nix-prefetch-git:*)",
       "WebFetch(domain:www.npmjs.com)",
       "Bash(./switch:*)",
-      "Bash(tree:*)"
+      "Bash(tree:*)",
+      "WebFetch(domain:astronvim.com)",
+      "WebFetch(domain:docs.astronvim.com)",
+      "Bash(python3:*)",
+      "Bash(# Check where tmux config is and what terminal-overrides it has grep -n \"\"terminal\"\" ~/.tmux.conf)",
+      "Bash(# Find where home-manager puts the tmux config ls -la ~/.config/tmux/ || echo \"\"No ~/.config/tmux\"\" ls -la ~/.tmux.conf || echo \"\"No ~/.tmux.conf\"\" cat ~/.config/tmux/tmux.conf)",
+      "Bash(# Comprehensive diagnostics echo \"\"=== TERM outside/inside tmux ===\"\" echo \"\"Current TERM: $TERM\"\" echo \"\"COLORTERM: $COLORTERM\"\" echo \"\"\"\" echo \"\"=== tmux version ===\"\" tmux -V echo \"\"\"\" echo \"\"=== tmux terminal settings ===\"\" tmux display -p \"\"default-terminal: #{default-terminal}\"\" tmux show -s terminal-overrides tmux show -s terminal-features || echo \"\"terminal-features not available\"\" echo \"\"\"\" echo \"\"=== Check if Tc capability is recognized ===\"\" tmux info)",
+      "Bash(# Find the generated init.lua find /nix/store -maxdepth 2 -name \"\"init.lua\"\" -path \"\"*neovim*\"\")",
+      "Bash(# Check what''s in the neovim config ls -la ~/.config/nvim/ cat ~/.config/nvim/init.lua)",
+      "Bash(# Find init.lua in the neovim store path ls -la /nix/store/gwygf50b9vp33fr0x0k7k6bz3ydxzw7f-neovim-runtime/etc/ cat /nix/store/gwygf50b9vp33fr0x0k7k6bz3ydxzw7f-neovim-runtime/etc/nvim/sysinit.vim)",
+      "Bash(xargs:*)",
+      "Bash(# Search for modes-related options in the neovim-flake grep -r \"\"modes\"\" ~/.nix-profile/share/nvim)"
     ],
     "deny": [],
     "ask": []

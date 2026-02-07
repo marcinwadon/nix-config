@@ -10,12 +10,12 @@ let
 
   agentic-nvim = pkgs.vimUtils.buildVimPlugin {
     pname = "agentic-nvim";
-    version = "2026-01-19";
+    version = "2026-01-27";
     src = pkgs.fetchFromGitHub {
       owner = "carlos-algms";
       repo = "agentic.nvim";
-      rev = "d3fecdba3fb685f0b7a35ac16c3c50d11882a28d";
-      hash = "sha256-HMBVkJg9B7PT0tjXdms+knhfqrh01NVxXnSusvB4qiI=";
+      rev = "e70d26a66821fe44f5c1b38896e59a955f6dd09a";
+      hash = "sha256-8OAiP50gYNiUXt+HTkunR9J5MYhUxDs5JBN+Q7TAD+A=";
     };
     nvimRequireCheck = "agentic";
   };
@@ -223,6 +223,7 @@ in
           enable = false;
         };
         nnoremap = {
+          "<leader>fr" = "<cmd>Telescope resume<CR>";
           "<leader>mc" = "<cmd>lua require('telescope').extensions.metals.commands()<CR>";
           "<leader><leader>o" = "<cmd>lua require('metals').organize_imports()<CR>";
           "<leader><leader>f" = "<cmd>!prettier -w %<CR>";
