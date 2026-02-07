@@ -30,7 +30,7 @@ in {
       }
     ];
     shortcut = "a";
-    terminal = "screen-256color";
+    terminal = "tmux-256color";
   };
   home.packages = [
     tmux-sessions

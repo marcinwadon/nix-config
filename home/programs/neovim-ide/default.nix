@@ -20,6 +20,18 @@ let
     nvimRequireCheck = "agentic";
   };
 
+  zellij-nav = pkgs.vimUtils.buildVimPlugin {
+    pname = "zellij-nav-nvim";
+    version = "2025-01-22";
+    src = pkgs.fetchFromGitHub {
+      owner = "swaits";
+      repo = "zellij-nav.nvim";
+      rev = "91cc2a642d8927ebde50ced5bf71ba470a0fc116";
+      hash = "sha256-OoxvSmZV6MCYKrH2ijGqIYhdSZG5oaRj+NFJGt0viyk=";
+    };
+    nvimRequireCheck = "zellij-nav";
+  };
+
   nvim-highlight-colors = pkgs.vimUtils.buildVimPlugin {
     pname = "nvim-highlight-colors";
     version = "2025-09-06";
@@ -58,7 +70,7 @@ in
           vim-repeat
           conform-nvim
         ];
-        startPlugins = [ agentic-nvim nvim-highlight-colors ];
+        startPlugins = [ agentic-nvim nvim-highlight-colors zellij-nav ];
         luaConfigRC = ''
           require("agentic").setup({
             provider = "claude-acp",
@@ -98,6 +110,9 @@ in
           vim.keymap.set({ "n", "v" }, "<leader>cf", function()
             require("conform").format({ async = true, lsp_fallback = true })
           end, { desc = "Format buffer (conform)" })
+
+          -- zellij-nav: seamless navigation between nvim splits and zellij panes
+          require("zellij-nav").setup()
 
           -- Set Visual highlight (visible blue)
           local function set_visual_hl()
@@ -230,6 +245,11 @@ in
           "<leader><leader>i" = "<cmd>!black %<CR>";
           "<leader><leader>u" = "<cmd>!isort %<CR>";
           "<leader><leader>y" = "<cmd>!autoflake -r --in-place --remove-unused-variables %<CR>";
+          # zellij-nav keymaps
+          "<C-h>" = "<cmd>ZellijNavigateLeft<CR>";
+          "<C-j>" = "<cmd>ZellijNavigateDown<CR>";
+          "<C-k>" = "<cmd>ZellijNavigateUp<CR>";
+          "<C-l>" = "<cmd>ZellijNavigateRight<CR>";
           # agentic.nvim keymaps
           "<C-\\>" = "<cmd>lua require('agentic').toggle()<CR>";
           "<C-'>" = "<cmd>lua require('agentic').add_selection_or_file_to_context()<CR>";

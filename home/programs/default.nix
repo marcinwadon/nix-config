@@ -56,6 +56,7 @@ in
   ./git
   ./fish
   ./tmux
+  ./zellij
   ./neovim-ide
   more
 ]

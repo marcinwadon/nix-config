@@ -28,6 +28,7 @@
     nyancat
     nix-index
     nix-output-monitor
+    pinentry-curses
     prettyping
     ripgrep
     tldr
@@ -51,5 +52,12 @@ in {
       EDITOR = "nvim";
       GITHUB_TOKEN = import ./secrets/github;
     };
+
+    file.".gnupg/gpg-agent.conf".text = ''
+      pinentry-program ${pkgs.pinentry-curses}/bin/pinentry-curses
+      enable-ssh-support
+      default-cache-ttl 28800
+      max-cache-ttl 28800
+    '';
   };
 }

@@ -1,0 +1,122 @@
+default_shell "fish"
+theme "nord"
+pane_frames true
+default_layout "custom"
+copy_on_select true
+scrollback_editor "nvim"
+mouse_mode true
+
+plugins {
+    autolock location="file:~/.config/zellij/plugins/zellij-autolock.wasm" {
+        triggers "nvim|vim|git|fzf|zoxide|atuin|claude"
+        watch_triggers "fzf|zoxide|atuin"
+        watch_interval "1.0"
+    }
+}
+
+keybinds {
+    // Keep all default keybindings, add tmux-style prefix mode
+    tmux {
+        // Split panes
+        bind "|" { NewPane "Right"; SwitchToMode "Normal"; }
+        bind "-" { NewPane "Down"; SwitchToMode "Normal"; }
+
+        // Pane navigation (vim-style)
+        bind "h" { MoveFocus "Left"; SwitchToMode "Normal"; }
+        bind "j" { MoveFocus "Down"; SwitchToMode "Normal"; }
+        bind "k" { MoveFocus "Up"; SwitchToMode "Normal"; }
+        bind "l" { MoveFocus "Right"; SwitchToMode "Normal"; }
+
+        // Tab navigation
+        bind "Ctrl h" { GoToPreviousTab; SwitchToMode "Normal"; }
+        bind "Ctrl l" { GoToNextTab; SwitchToMode "Normal"; }
+
+        // Resize panes
+        bind "H" { Resize "Increase Left"; }
+        bind "J" { Resize "Increase Down"; }
+        bind "K" { Resize "Increase Up"; }
+        bind "L" { Resize "Increase Right"; }
+
+        // Close pane (no confirmation)
+        bind "x" { CloseFocus; SwitchToMode "Normal"; }
+
+        // New tab
+        bind "c" { NewTab; SwitchToMode "Normal"; }
+
+        // Detach session
+        bind "d" { Detach; }
+
+        // Toggle pane fullscreen (zoom)
+        bind "z" { ToggleFocusFullscreen; SwitchToMode "Normal"; }
+
+        // Enter scroll/copy mode
+        bind "[" { SwitchToMode "Scroll"; }
+
+        // Rename tab
+        bind "," { SwitchToMode "RenameTab"; TabNameInput 0; }
+
+        // Go to tab by number
+        bind "1" { GoToTab 1; SwitchToMode "Normal"; }
+        bind "2" { GoToTab 2; SwitchToMode "Normal"; }
+        bind "3" { GoToTab 3; SwitchToMode "Normal"; }
+        bind "4" { GoToTab 4; SwitchToMode "Normal"; }
+        bind "5" { GoToTab 5; SwitchToMode "Normal"; }
+        bind "6" { GoToTab 6; SwitchToMode "Normal"; }
+        bind "7" { GoToTab 7; SwitchToMode "Normal"; }
+        bind "8" { GoToTab 8; SwitchToMode "Normal"; }
+        bind "9" { GoToTab 9; SwitchToMode "Normal"; }
+
+        // Zellij bonus: toggle floating pane
+        bind "f" { ToggleFloatingPanes; SwitchToMode "Normal"; }
+
+        // Zellij bonus: cycle layouts
+        bind "Space" { NextSwapLayout; SwitchToMode "Normal"; }
+
+        // Ghost: floating command pane
+        bind "g" {
+            LaunchPlugin "file:~/.config/zellij/plugins/ghost.wasm" {
+                floating true
+            };
+            SwitchToMode "Normal";
+        }
+
+        // Harpoon: quick pane navigation
+        bind "m" {
+            LaunchPlugin "file:~/.config/zellij/plugins/harpoon.wasm" {
+                floating true
+            };
+            SwitchToMode "Normal";
+        }
+
+        // Choose-tree: list and switch existing sessions (like tmux choose-tree)
+        bind "w" {
+            LaunchPlugin "file:~/.config/zellij/plugins/zellij-choose-tree.wasm" {
+                floating true
+            };
+            SwitchToMode "Normal";
+        }
+
+        // Sessionizer: create/switch sessions from project directories
+        bind "s" {
+            LaunchPlugin "file:~/.config/zellij/plugins/zellij-sessionizer.wasm" {
+                floating true
+                default_dirs "~/Projects;~/Projects/parloa;~/Projects/evojam;~/Projects/marcinwadon"
+            };
+            SwitchToMode "Normal";
+        }
+    }
+
+    // Ctrl-a enters tmux mode (prefix key)
+    shared_except "tmux" "locked" {
+        bind "Ctrl a" { SwitchToMode "Tmux"; }
+    }
+
+    // Scroll mode with vi bindings
+    scroll {
+        bind "j" { ScrollDown; }
+        bind "k" { ScrollUp; }
+        bind "Ctrl d" { HalfPageScrollDown; }
+        bind "Ctrl u" { HalfPageScrollUp; }
+        bind "/" { SwitchToMode "EnterSearch"; SearchInput 0; }
+    }
+}

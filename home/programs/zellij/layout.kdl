@@ -1,0 +1,42 @@
+layout {
+    default_tab_template {
+        pane size=1 borderless=true {
+            plugin location="file:~/.config/zellij/plugins/zjstatus.wasm" {
+                format_left   "{mode}#[bg=#2e3440] {tabs}"
+                format_center ""
+                format_right  "#[bg=#2e3440,fg=#81a1c1]#[bg=#81a1c1,fg=#2e3440,bold] {session} #[bg=#3b4252,fg=#81a1c1]#[bg=#3b4252,fg=#d8dee9] {datetime}"
+                format_space  "#[bg=#2e3440]"
+
+                hide_frame_for_single_pane "true"
+
+                mode_normal        "#[bg=#a3be8c,fg=#2e3440,bold] NORMAL "
+                mode_tmux          "#[bg=#d08770,fg=#2e3440,bold] TMUX "
+                mode_locked        "#[bg=#bf616a,fg=#2e3440,bold] LOCKED "
+                mode_scroll        "#[bg=#ebcb8b,fg=#2e3440,bold] SCROLL "
+                mode_enter_search  "#[bg=#ebcb8b,fg=#2e3440,bold] SEARCH "
+                mode_search        "#[bg=#ebcb8b,fg=#2e3440,bold] SEARCH "
+                mode_resize        "#[bg=#b48ead,fg=#2e3440,bold] RESIZE "
+                mode_pane          "#[bg=#81a1c1,fg=#2e3440,bold] PANE "
+                mode_tab           "#[bg=#81a1c1,fg=#2e3440,bold] TAB "
+                mode_rename_tab    "#[bg=#81a1c1,fg=#2e3440,bold] RENAME "
+                mode_rename_pane   "#[bg=#81a1c1,fg=#2e3440,bold] RENAME "
+                mode_move          "#[bg=#b48ead,fg=#2e3440,bold] MOVE "
+                mode_session       "#[bg=#88c0d0,fg=#2e3440,bold] SESSION "
+                mode_prompt        "#[bg=#88c0d0,fg=#2e3440,bold] PROMPT "
+
+                tab_normal              "#[bg=#2e3440,fg=#3b4252]#[bg=#3b4252,fg=#d8dee9] {name} #[bg=#2e3440,fg=#3b4252]"
+                tab_normal_fullscreen   "#[bg=#2e3440,fg=#3b4252]#[bg=#3b4252,fg=#d8dee9] {name} [] #[bg=#2e3440,fg=#3b4252]"
+                tab_normal_sync         "#[bg=#2e3440,fg=#3b4252]#[bg=#3b4252,fg=#d8dee9] {name} <> #[bg=#2e3440,fg=#3b4252]"
+                tab_active              "#[bg=#2e3440,fg=#81a1c1]#[bg=#81a1c1,fg=#2e3440,bold] {name} #[bg=#2e3440,fg=#81a1c1]"
+                tab_active_fullscreen   "#[bg=#2e3440,fg=#81a1c1]#[bg=#81a1c1,fg=#2e3440,bold] {name} [] #[bg=#2e3440,fg=#81a1c1]"
+                tab_active_sync         "#[bg=#2e3440,fg=#81a1c1]#[bg=#81a1c1,fg=#2e3440,bold] {name} <> #[bg=#2e3440,fg=#81a1c1]"
+                tab_separator           "#[bg=#2e3440] "
+
+                datetime          "#[bg=#3b4252,fg=#d8dee9] {format} "
+                datetime_format   "%H:%M %d-%b"
+                datetime_timezone "Europe/Warsaw"
+            }
+        }
+        children
+    }
+}
