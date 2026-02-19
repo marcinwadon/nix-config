@@ -28,7 +28,7 @@
     nyancat
     nix-index
     nix-output-monitor
-    pinentry-curses
+    pinentry_mac
     prettyping
     ripgrep
     tldr
@@ -54,7 +54,7 @@ in {
     };
 
     file.".gnupg/gpg-agent.conf".text = ''
-      pinentry-program ${pkgs.pinentry-curses}/bin/pinentry-curses
+      pinentry-program ${pkgs.pinentry_mac}/Applications/pinentry-mac.app/Contents/MacOS/pinentry-mac
       enable-ssh-support
       default-cache-ttl 28800
       max-cache-ttl 28800

@@ -19,6 +19,5 @@ in {
     "zellij/plugins/ghost.wasm".source = plugins.ghost;
     "zellij/plugins/harpoon.wasm".source = plugins.harpoon;
     "zellij/plugins/zellij-choose-tree.wasm".source = plugins.zellij-choose-tree;
-    "zellij/plugins/zellij-sessionizer.wasm".source = plugins.zellij-sessionizer;
   };
 }

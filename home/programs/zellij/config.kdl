@@ -95,15 +95,6 @@ keybinds {
             };
             SwitchToMode "Normal";
         }
-
-        // Sessionizer: create/switch sessions from project directories
-        bind "s" {
-            LaunchPlugin "file:~/.config/zellij/plugins/zellij-sessionizer.wasm" {
-                floating true
-                default_dirs "~/Projects;~/Projects/parloa;~/Projects/evojam;~/Projects/marcinwadon"
-            };
-            SwitchToMode "Normal";
-        }
     }
 
     // Ctrl-a enters tmux mode (prefix key)

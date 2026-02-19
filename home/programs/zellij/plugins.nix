@@ -23,9 +23,4 @@
     url = "https://github.com/laperlej/zellij-choose-tree/releases/download/v0.4.2/zellij-choose-tree.wasm";
     hash = "sha256-OGHLzCM9wg0CLm5SSr3bmElcciBIqamalQjgkTuzAeg=";
   };
-
-  zellij-sessionizer = pkgs.fetchurl {
-    url = "https://github.com/cunialino/zellij-sessionizer/releases/download/v0.1.1/sessionizer.wasm";
-    hash = "sha256-2Mp0GbmDSAjl90JQi405dwYl1vvIaLhQ3kcWH5P9Xn0=";
-  };
 }
