@@ -67,6 +67,7 @@ in
           vim-mergetool
           vim-repeat
           conform-nvim
+          render-markdown-nvim
         ];
         startPlugins = [ agentic-nvim nvim-highlight-colors zellij-nav ];
         luaConfigRC = ''
@@ -80,6 +81,9 @@ in
             enable_named_colors = true,
             enable_tailwind = true,
           })
+
+          -- render-markdown.nvim: inline markdown styling (headings, bullets, code, tables, checkboxes)
+          require("render-markdown").setup({})
 
           -- conform.nvim: lightweight formatting
           require("conform").setup({
@@ -262,6 +266,8 @@ in
           # agentic.nvim keymaps
           "<C-\\>" = "<cmd>lua require('agentic').toggle()<CR>";
           "<C-'>" = "<cmd>lua require('agentic').add_selection_or_file_to_context()<CR>";
+          # render-markdown.nvim: toggle inline markdown rendering
+          "<leader>mt" = "<cmd>RenderMarkdown toggle<CR>";
         };
       };
     };
