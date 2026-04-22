@@ -52,8 +52,6 @@ let
   };
 in
 {
-  home.packages = [ pkgs.claude-code-acp ];
-
   programs.neovim-ide = {
     enable = true;
     settings = {
@@ -65,7 +63,7 @@ in
         mapLeaderSpace = false;
         preventJunkFiles = true;
         customPlugins = with pkgs.vimPlugins; [
-          multiple-cursors
+          vim-multiple-cursors
           vim-mergetool
           vim-repeat
           conform-nvim
@@ -86,15 +84,18 @@ in
           -- conform.nvim: lightweight formatting
           require("conform").setup({
             formatters_by_ft = {
-              javascript = { "prettier" },
-              typescript = { "prettier" },
-              typescriptreact = { "prettier" },
-              javascriptreact = { "prettier" },
-              json = { "prettier" },
-              yaml = { "prettier" },
-              html = { "prettier" },
-              css = { "prettier" },
-              markdown = { "prettier" },
+              javascript = { "oxfmt" },
+              typescript = { "oxfmt" },
+              typescriptreact = { "oxfmt" },
+              javascriptreact = { "oxfmt" },
+              json = { "oxfmt" },
+              jsonc = { "oxfmt" },
+              yaml = { "oxfmt" },
+              toml = { "oxfmt" },
+              html = { "oxfmt" },
+              css = { "oxfmt" },
+              scss = { "oxfmt" },
+              markdown = { "oxfmt" },
               python = { "isort", "black" },
               nix = { "alejandra" },
               go = { "gofmt" },
@@ -110,6 +111,14 @@ in
           vim.keymap.set({ "n", "v" }, "<leader>cf", function()
             require("conform").format({ async = true, lsp_fallback = true })
           end, { desc = "Format buffer (conform)" })
+
+          -- oxfmt: fast Prettier-compatible formatter as LSP
+          vim.lsp.config['oxfmt'] = {
+            cmd = { '${pkgs.oxfmt}/bin/oxfmt', '--lsp' },
+            filetypes = { 'javascript', 'javascriptreact', 'typescript', 'typescriptreact', 'json', 'jsonc', 'yaml', 'toml', 'html', 'css', 'scss', 'markdown' },
+            root_markers = { '.oxfmtrc.json', '.oxfmtrc.jsonc', 'oxfmt.config.ts', 'package.json' },
+          }
+          vim.lsp.enable('oxfmt')
 
           -- zellij-nav: seamless navigation between nvim splits and zellij panes
           require("zellij-nav").setup()

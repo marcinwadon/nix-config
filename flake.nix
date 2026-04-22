@@ -9,6 +9,9 @@
     # Stable nixpkgs for packages that break on unstable
     nixpkgs-stable.url = "nixpkgs/nixos-24.05";
 
+    # nixpkgs pinned before nodePackages removal (2026-03-03) for neovim-flake
+    nixpkgs-pre-nodepackages.url = "github:NixOS/nixpkgs/a82ccc39b39b621151d6732718e3e250109076fa";
+
     darwin = {
       url = github:LnL7/nix-darwin;
       inputs.nixpkgs.follows = "nixpkgs";
@@ -26,7 +29,9 @@
 
     neovim-flake = {
       url = github:gvolpe/neovim-flake;
-      inputs.nixpkgs.follows = "nixpkgs";
+      # neovim-flake internally uses pkgs.nodePackages (removed 2026-03-03);
+      # pin its nixpkgs to a version that still has nodePackages
+      inputs.nixpkgs.follows = "nixpkgs-pre-nodepackages";
     };
 
     fish-bobthefish-theme = {

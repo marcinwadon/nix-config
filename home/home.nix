@@ -13,6 +13,8 @@
   defaultPkgs = with pkgs; [
     alejandra
     any-nix-shell
+    oxfmt
+    oxlint
     asciinema
     bottom
     cachix
