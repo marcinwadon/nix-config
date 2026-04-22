@@ -68,6 +68,7 @@ in
           vim-repeat
           conform-nvim
           render-markdown-nvim
+          markdown-preview-nvim
         ];
         startPlugins = [ agentic-nvim nvim-highlight-colors zellij-nav ];
         luaConfigRC = ''
@@ -268,6 +269,8 @@ in
           "<C-'>" = "<cmd>lua require('agentic').add_selection_or_file_to_context()<CR>";
           # render-markdown.nvim: toggle inline markdown rendering
           "<leader>mt" = "<cmd>RenderMarkdown toggle<CR>";
+          # markdown-preview.nvim: toggle live browser preview
+          "<leader>mp" = "<cmd>MarkdownPreviewToggle<CR>";
         };
       };
     };
