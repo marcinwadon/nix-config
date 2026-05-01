@@ -26,6 +26,7 @@
     gh
     killall
     lnav
+    mosh
     ncdu
     nyancat
     nix-index
