@@ -59,7 +59,6 @@ in {
     enable = true;
     plugins = [custom.theme fenv z];
     interactiveShellInit = ''
-      eval (direnv hook fish)
       any-nix-shell fish --info-right | source
     '';
     shellAliases = {

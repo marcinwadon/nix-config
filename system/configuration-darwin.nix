@@ -5,13 +5,13 @@
   inputs,
   ...
 }: {
-  environment.systemPackages = with pkgs; [
-    vim
-    wget
-    fish
-    yubikey-manager
-    yubikey-personalization
-    gnupg
+  environment.systemPackages = [
+    pkgs.vim
+    pkgs.wget
+    pkgs.fish
+    pkgs.yubikey-manager
+    pkgs.yubikey-personalization
+    pkgs.gnupg
   ];
 
   programs.fish.enable = true;
@@ -72,12 +72,9 @@
       trusted-users = ["root" "marcinwadon"];
       substituters = ["https://claude-code.cachix.org"];
       trusted-public-keys = ["claude-code.cachix.org-1:YeXf2aNu7UTX8Vwrze0za1WEDS+4DuI2kVeWEE4fsRk="];
+      keep-outputs = true;
+      keep-derivations = true;
     };
-
-    extraOptions = ''
-      keep-outputs = true
-      keep-derivations = true
-    '';
   };
 
   ids.gids.nixbld = 350;

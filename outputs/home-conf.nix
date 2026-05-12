@@ -1,40 +1,34 @@
-{inputs, ...}:
-with inputs; let
+{inputs, ...}: let
+  system = "aarch64-darwin";
+
   # Use stable fish version (4.0.x) from nixpkgs-stable instead of unstable (4.2.x)
-  pkgs-stable = import nixpkgs-stable {
-    system = "aarch64-darwin";
+  pkgs-stable = import inputs.nixpkgs-stable {
+    inherit system;
     config.allowUnfree = true;
   };
 
-  fishOverlay = f: p: {
-    inherit fish-bobthefish-theme;
+  fishOverlay = _final: _prev: {
+    inherit (inputs) fish-bobthefish-theme;
     fish = pkgs-stable.fish;
   };
 
-  neovimOverlay = neovim-nightly-overlay.overlays.default;
-
-  pkgs = import nixpkgs {
-    system = "aarch64-darwin";
+  pkgs = import inputs.nixpkgs {
+    inherit system;
     config.allowUnfree = true;
-
     overlays = [
       fishOverlay
-      claude-code.overlays.default
-      nurpkgs.overlays.default
-      neovim-flake.overlays.aarch64-darwin.default
-      neovimOverlay
+      inputs.claude-code.overlays.default
+      inputs.nurpkgs.overlays.default
+      inputs.neovim-flake.overlays.${system}.default
+      inputs.neovim-nightly-overlay.overlays.default
     ];
   };
 
-  mkHome = home-manager.lib.homeManagerConfiguration {
+  mkHome = inputs.home-manager.lib.homeManagerConfiguration {
     inherit pkgs;
-
-    extraSpecialArgs = {
-      darwin = true;
-    };
-
+    extraSpecialArgs = {darwin = true;};
     modules = [
-      neovim-flake.homeManagerModules.aarch64-darwin.default
+      inputs.neovim-flake.homeManagerModules.${system}.default
       ../home/home.nix
     ];
   };

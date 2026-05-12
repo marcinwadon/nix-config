@@ -5,11 +5,11 @@ let
     pkgs,
     ...
   }: let
-    clean-bsp-workspace = pkgs.callPackage ./clean-bsp-workspace.nix {inherit pkgs;};
-    tmux-close = pkgs.callPackage ./tmux-close.nix {inherit pkgs;};
-    mainnet = pkgs.callPackage ./h_mainnet.nix {inherit pkgs;};
-    testnet = pkgs.callPackage ./h_testnet.nix {inherit pkgs;};
-    integrationnet = pkgs.callPackage ./h_integrationnet.nix {inherit pkgs;};
+    clean-bsp-workspace = pkgs.callPackage ./clean-bsp-workspace.nix {};
+    tmux-close = pkgs.callPackage ./tmux-close.nix {};
+    mainnet = pkgs.callPackage ./h_mainnet.nix {};
+    testnet = pkgs.callPackage ./h_testnet.nix {};
+    integrationnet = pkgs.callPackage ./h_integrationnet.nix {};
   in {
     home.packages = [
       clean-bsp-workspace

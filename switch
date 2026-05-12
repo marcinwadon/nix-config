@@ -16,7 +16,7 @@ case $1 in
   "home")
     rebuild_home;;
   "darwin")
-    darwin-rebuild switch --flake .;;
+    darwin-rebuild switch --flake .#studio;;
   "update-fish")
     fish -c fish_update_completions;;
   "update-flakes")

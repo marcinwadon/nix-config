@@ -2,40 +2,38 @@
   config,
   lib,
   pkgs,
-  stdenv,
   darwin,
   ...
 }: let
   username = "marcinwadon";
   homeDirectory = "/Users/${username}";
-  configHome = "${homeDirectory}/.config";
 
-  defaultPkgs = with pkgs; [
-    alejandra
-    any-nix-shell
-    oxfmt
-    oxlint
-    asciinema
-    bottom
-    cachix
-    claude-code
-    dig
-    duf
-    eza
-    fd
-    gh
-    killall
-    lnav
-    mosh
-    ncdu
-    nyancat
-    nix-index
-    nix-output-monitor
-    pinentry_mac
-    prettyping
-    ripgrep
-    tldr
-    tree
+  defaultPkgs = [
+    pkgs.alejandra
+    pkgs.any-nix-shell
+    pkgs.oxfmt
+    pkgs.oxlint
+    pkgs.asciinema
+    pkgs.bottom
+    pkgs.cachix
+    pkgs.claude-code
+    pkgs.dig
+    pkgs.duf
+    pkgs.eza
+    pkgs.fd
+    pkgs.gh
+    pkgs.killall
+    pkgs.lnav
+    pkgs.mosh
+    pkgs.ncdu
+    pkgs.nyancat
+    pkgs.nix-index
+    pkgs.nix-output-monitor
+    pkgs.pinentry_mac
+    pkgs.prettyping
+    pkgs.ripgrep
+    pkgs.tldr
+    pkgs.tree
   ];
 in {
   programs.home-manager.enable = true;
