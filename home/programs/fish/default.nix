@@ -47,6 +47,7 @@
 
   fishConfig =
     ''
+      fish_add_path --prepend ~/.local/bin
       bind \t accept-autosuggestion
       set fish_greeting
     ''

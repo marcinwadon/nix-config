@@ -58,5 +58,6 @@ in
   ./tmux
   ./zellij
   ./neovim-ide
+  ./claude-code
   more
 ]
