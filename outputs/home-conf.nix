@@ -26,7 +26,7 @@
 
   mkHome = inputs.home-manager.lib.homeManagerConfiguration {
     inherit pkgs;
-    extraSpecialArgs = {darwin = true;};
+    extraSpecialArgs = {profile = import ../home/profiles/darwin.nix;};
     modules = [
       inputs.neovim-flake.homeManagerModules.${system}.default
       ../home/home.nix
