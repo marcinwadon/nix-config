@@ -6,8 +6,6 @@
 let
   metals = pkgs.callPackage ./metals.nix { };
 
-  openaiApiKey = import ../../secrets/openaiApiKey;
-
   agentic-nvim = pkgs.vimUtils.buildVimPlugin {
     pname = "agentic-nvim";
     version = "2026-01-27";
