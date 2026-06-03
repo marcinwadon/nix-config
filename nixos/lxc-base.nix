@@ -40,6 +40,17 @@
     trusted-users = ["root" "marcin"];
   };
 
+  # Run generic, dynamically-linked binaries (e.g. the native `claude` install
+  # in ~/.local/bin) on NixOS via nix-ld's stub loader + a base library set.
+  programs.nix-ld = {
+    enable = true;
+    libraries = with pkgs; [
+      stdenv.cc.cc.lib # libstdc++ / libgcc_s
+      zlib
+      openssl
+    ];
+  };
+
   users.users.marcin = {
     isNormalUser = true;
     extraGroups = ["wheel"];
