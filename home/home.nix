@@ -60,6 +60,10 @@ in {
 
     packages = defaultPkgs;
 
+    # Linux containers: put ~/.local/bin on PATH (across shells) so the native
+    # `claude` install is found. Darwin already gets this via fish_add_path.
+    sessionPath = lib.optionals pkgs.stdenv.isLinux ["$HOME/.local/bin"];
+
     sessionVariables =
       {EDITOR = "nvim";}
       // lib.optionalAttrs (p.githubToken != null) {
