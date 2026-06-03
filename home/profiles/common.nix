@@ -3,7 +3,15 @@
   username = "marcin";
   enableConstellationScripts = false;
   enableBspCleanup = false;
-  sshMatchBlocks = {};
+
+  # Authenticate to GitHub with the per-env signing key (no ssh-agent in the
+  # container — point IdentityFile straight at the sops-provisioned private key).
+  sshMatchBlocks = {
+    "github.com" = {
+      identityFile = "/run/secrets/ssh_signing_key";
+      identitiesOnly = true;
+    };
+  };
 
   git = {
     userName = "Marcin Wadon";
