@@ -3,20 +3,21 @@ let
     config,
     lib,
     pkgs,
+    profile ? {},
     ...
   }: let
-    clean-bsp-workspace = pkgs.callPackage ./clean-bsp-workspace.nix {};
-    tmux-close = pkgs.callPackage ./tmux-close.nix {};
-    mainnet = pkgs.callPackage ./h_mainnet.nix {};
-    testnet = pkgs.callPackage ./h_testnet.nix {};
-    integrationnet = pkgs.callPackage ./h_integrationnet.nix {};
+    defaults = import ../lib/profile-defaults.nix;
+    p = lib.recursiveUpdate defaults profile;
   in {
-    home.packages = [
-      clean-bsp-workspace
-      tmux-close
-      mainnet
-      testnet
-      integrationnet
-    ];
+    home.packages =
+      lib.optionals p.enableBspCleanup [
+        (pkgs.callPackage ./clean-bsp-workspace.nix {})
+      ]
+      ++ [(pkgs.callPackage ./tmux-close.nix {})]
+      ++ lib.optionals p.enableConstellationScripts [
+        (pkgs.callPackage ./h_mainnet.nix {})
+        (pkgs.callPackage ./h_testnet.nix {})
+        (pkgs.callPackage ./h_integrationnet.nix {})
+      ];
   };
 in [scripts]
