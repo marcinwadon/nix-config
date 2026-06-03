@@ -411,20 +411,32 @@ in [
     };
   };
 
-  identityConfig =
+  # NOTE: `//` is a shallow merge. Build each nested attr (`user`, `gpg`) in ONE
+  # place so sub-keys aren't clobbered. `gpg.format` is emitted only for ssh —
+  # openpgp is git's default, so omitting it keeps the Darwin config byte-identical.
+  identityConfig = let
+    s = g.signing;
+    emitFormat = s.enable && s.format == "ssh";
+  in
     {
-      user = {
-        email = g.userEmail;
-        name = g.userName;
-      };
+      user =
+        {
+          email = g.userEmail;
+          name = g.userName;
+        }
+        // lib.optionalAttrs (s.enable && s.key != null) {
+          signingkey = s.key;
+        };
     }
-    // lib.optionalAttrs g.signing.enable {
-      commit.gpgsign = g.signing.signByDefault;
-      gpg.format = g.signing.format;
-      user.signingkey = g.signing.key;
+    // lib.optionalAttrs s.enable {
+      commit.gpgsign = s.signByDefault;
     }
-    // lib.optionalAttrs (g.signing.enable && g.signing.format == "ssh" && g.signing.allowedSignersFile != null) {
-      gpg.ssh.allowedSignersFile = g.signing.allowedSignersFile;
+    // lib.optionalAttrs emitFormat {
+      gpg =
+        {format = "ssh";}
+        // lib.optionalAttrs (s.allowedSignersFile != null) {
+          ssh.allowedSignersFile = s.allowedSignersFile;
+        };
     };
 
   aliases = {
