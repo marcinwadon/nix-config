@@ -63,7 +63,7 @@
     };
   };
 
-  outputs = inputs: let
+  outputs = {self, ...} @ inputs: let
     system = "aarch64-darwin";
     pkgs = inputs.nixpkgs.legacyPackages.${system};
   in {
@@ -72,6 +72,12 @@
     darwinConfigurations = import ./outputs/darwin-conf.nix {inherit inputs;};
 
     nixosConfigurations = import ./outputs/nixos-conf.nix {inherit inputs;};
+
+    packages.x86_64-linux.lxcTemplate = inputs.nixos-generators.nixosGenerate {
+      system = "x86_64-linux";
+      format = "proxmox-lxc";
+      modules = ["${self}/nixos/template.nix"];
+    };
 
     formatter.x86_64-linux = inputs.nixpkgs.legacyPackages.x86_64-linux.alejandra;
 

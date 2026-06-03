@@ -21,10 +21,18 @@ case $1 in
     fish -c fish_update_completions;;
   "update-flakes")
     nix flake update;;
+  "template")
+    nix build .#packages.x86_64-linux.lxcTemplate "${@:2}"
+    echo "Template built at ./result (run this on the Proxmox host)";;
+  "nixos")
+    if [ -z "$2" ]; then echo "Usage: $0 nixos <personal|evojam|parloa>"; exit 1; fi
+    sudo nixos-rebuild switch --flake ".#$2";;
   *)
-    echo "Usage: $0 {home|darwin|update-fish|update-flakes}"
-    echo "  home        - rebuild home-manager configuration"
-    echo "  darwin      - rebuild darwin system configuration"
-    echo "  update-fish - update fish completions"
-    echo "  update-flakes - update all flake inputs";;
+    echo "Usage: $0 {home|darwin|update-fish|update-flakes|template|nixos <env>}"
+    echo "  home          - rebuild home-manager configuration"
+    echo "  darwin        - rebuild darwin system configuration"
+    echo "  update-fish   - update fish completions"
+    echo "  update-flakes - update all flake inputs"
+    echo "  template      - build Proxmox LXC template (x86_64-linux)"
+    echo "  nixos <env>   - rebuild NixOS configuration for <env> (personal|evojam|parloa)";;
 esac

@@ -1,3 +1,8 @@
 result
 .DS_Store
 .superpowers/
+
+# decrypted sops material / generated keys
+*.dec
+key
+secrets/*.plain
