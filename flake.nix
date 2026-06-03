@@ -67,7 +67,7 @@
     system = "aarch64-darwin";
     pkgs = inputs.nixpkgs.legacyPackages.${system};
   in {
-    homeConfigurations = import ./outputs/home-conf.nix {inherit inputs;};
+    homeConfigurations = (import ./outputs/home-conf.nix {inherit inputs;}).homeConfigurations;
 
     darwinConfigurations = import ./outputs/darwin-conf.nix {inherit inputs;};
 

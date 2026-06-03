@@ -1,37 +1,47 @@
 {inputs, ...}: let
-  system = "aarch64-darwin";
+  mkFishOverlay = system: let
+    pkgs-stable = import inputs.nixpkgs-stable {
+      inherit system;
+      config.allowUnfree = true;
+    };
+  in
+    _final: _prev: {
+      inherit (inputs) fish-bobthefish-theme;
+      fish = pkgs-stable.fish;
+    };
 
-  # Use stable fish version (4.0.x) from nixpkgs-stable instead of unstable (4.2.x)
-  pkgs-stable = import inputs.nixpkgs-stable {
-    inherit system;
-    config.allowUnfree = true;
-  };
+  mkPkgs = system:
+    import inputs.nixpkgs {
+      inherit system;
+      config.allowUnfree = true;
+      overlays = [
+        (mkFishOverlay system)
+        inputs.claude-code.overlays.default
+        inputs.nurpkgs.overlays.default
+        inputs.neovim-flake.overlays.${system}.default
+        inputs.neovim-nightly-overlay.overlays.default
+      ];
+    };
 
-  fishOverlay = _final: _prev: {
-    inherit (inputs) fish-bobthefish-theme;
-    fish = pkgs-stable.fish;
-  };
-
-  pkgs = import inputs.nixpkgs {
-    inherit system;
-    config.allowUnfree = true;
-    overlays = [
-      fishOverlay
-      inputs.claude-code.overlays.default
-      inputs.nurpkgs.overlays.default
-      inputs.neovim-flake.overlays.${system}.default
-      inputs.neovim-nightly-overlay.overlays.default
-    ];
-  };
-
-  mkHome = inputs.home-manager.lib.homeManagerConfiguration {
-    inherit pkgs;
-    extraSpecialArgs = {profile = import ../home/profiles/darwin.nix;};
-    modules = [
-      inputs.neovim-flake.homeManagerModules.${system}.default
-      ../home/home.nix
-    ];
-  };
+  mkHome = {
+    system,
+    profile,
+  }:
+    inputs.home-manager.lib.homeManagerConfiguration {
+      pkgs = mkPkgs system;
+      extraSpecialArgs = {inherit profile;};
+      modules = [
+        inputs.neovim-flake.homeManagerModules.${system}.default
+        ../home/home.nix
+      ];
+    };
 in {
-  marcinwadon = mkHome;
+  # Exposed builders so the NixOS layer can reuse the same module set.
+  inherit mkHome mkPkgs;
+
+  # Darwin standalone home configuration (unchanged behavior).
+  homeConfigurations.marcinwadon = mkHome {
+    system = "aarch64-darwin";
+    profile = import ../home/profiles/darwin.nix;
+  };
 }
