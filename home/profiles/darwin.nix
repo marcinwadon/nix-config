@@ -3,6 +3,7 @@ let
   parloaSecrets = import ../secrets/parloa.nix;
 in {
   username = "marcinwadon";
+  isDarwin = true;
 
   githubToken = import ../secrets/github;
 

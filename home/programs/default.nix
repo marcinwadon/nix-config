@@ -63,12 +63,30 @@ let
       };
     };
   };
+
+  # neovim-flake (gvolpe) is Darwin-only: its deliberately-pinned old nixpkgs uses
+  # a cargo-vendor util whose User-Agent crates.io now blocks (403), so it can't
+  # source-build on Linux. Linux containers get a plain nixpkgs neovim instead.
+  neovim = {
+    lib,
+    profile ? {},
+    ...
+  }: {
+    # `imports` must branch on an externally-provided arg (profile), never on
+    # pkgs/config — a config-dependent import causes infinite recursion.
+    imports = lib.optionals (profile.isDarwin or false) [./neovim-ide];
+    programs.neovim = lib.mkIf (!(profile.isDarwin or false)) {
+      enable = true;
+      viAlias = true;
+      vimAlias = true;
+    };
+  };
 in [
   ./git
   ./fish
   ./tmux
   ./zellij
-  ./neovim-ide
+  neovim
   ./claude-code
   more
 ]

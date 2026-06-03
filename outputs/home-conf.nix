@@ -10,13 +10,19 @@
       fish = pkgs-stable.fish;
     };
 
-  mkOverlays = system: [
-    (mkFishOverlay system)
-    inputs.claude-code.overlays.default
-    inputs.nurpkgs.overlays.default
-    inputs.neovim-flake.overlays.${system}.default
-    inputs.neovim-nightly-overlay.overlays.default
-  ];
+  # neovim overlays override pkgs.neovim with neovim-flake's source-built nvim,
+  # which can't build on Linux (crates.io blocks the pinned old nixpkgs's
+  # cargo-vendor User-Agent). Darwin-only; Linux uses stock nixpkgs neovim.
+  mkOverlays = system:
+    [
+      (mkFishOverlay system)
+      inputs.claude-code.overlays.default
+      inputs.nurpkgs.overlays.default
+    ]
+    ++ inputs.nixpkgs.lib.optionals (system == "aarch64-darwin") [
+      inputs.neovim-flake.overlays.${system}.default
+      inputs.neovim-nightly-overlay.overlays.default
+    ];
 
   mkPkgs = system:
     import inputs.nixpkgs {

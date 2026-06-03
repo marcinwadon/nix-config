@@ -2,7 +2,9 @@
   system = "x86_64-linux";
   homeConf = import ./home-conf.nix {inherit inputs;};
   overlays = homeConf.mkOverlays system;
-  homeModules = [inputs.neovim-flake.homeManagerModules.${system}.default];
+  # neovim-flake module is Darwin-only (see home/programs/default.nix); Linux
+  # containers use a plain nixpkgs neovim, so no extra home-manager modules here.
+  homeModules = [];
 
   mkEnv = name: profile:
     inputs.nixpkgs.lib.nixosSystem {

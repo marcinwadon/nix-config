@@ -3,6 +3,10 @@
 {
   username = "marcin";
 
+  # Platform marker (externally-provided so it is safe to branch `imports` on it,
+  # unlike pkgs.stdenv which derives from config and causes infinite recursion).
+  isDarwin = false;
+
   # Git identity + signing for this environment.
   git = {
     userName = "Marcin Wadon";
