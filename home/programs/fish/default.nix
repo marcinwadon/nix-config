@@ -5,6 +5,15 @@
   profile ? {},
   ...
 }: let
+  # Linux containers: drop into a detachable zellij session on interactive login
+  # so claude (and everything else) runs inside it and survives mosh disconnects.
+  # Guarded against nesting (ZELLIJ/TMUX already set) and non-interactive shells.
+  zellijAutoAttach = lib.optionalString pkgs.stdenv.isLinux ''
+    if status is-interactive; and not set -q ZELLIJ; and not set -q TMUX
+      zellij attach --create main
+    end
+  '';
+
   fzfConfig = ''
     set -x FZF_DEFAULT_OPTS "--preview='bat {} --color=always'" \n
     set -x SKIM_DEFAULT_COMMAND "rg --files || fd || find ."
@@ -63,9 +72,11 @@ in {
   programs.fish = {
     enable = true;
     plugins = [custom.theme fenv z];
-    interactiveShellInit = ''
-      any-nix-shell fish --info-right | source
-    '';
+    interactiveShellInit =
+      ''
+        any-nix-shell fish --info-right | source
+      ''
+      + zellijAutoAttach;
     shellAliases = {
       cat = "bat";
       dc = "docker-compose";
