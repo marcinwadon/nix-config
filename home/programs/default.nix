@@ -1,5 +1,13 @@
 let
-  more = { pkgs, ... }: {
+  more = {
+    pkgs,
+    lib,
+    profile ? {},
+    ...
+  }: let
+    defaults = import ../lib/profile-defaults.nix;
+    p = lib.recursiveUpdate defaults profile;
+  in {
     programs = {
       bat.enable = true;
 
@@ -17,11 +25,12 @@ let
         enable = true;
         enableFishIntegration = true;
         defaultCommand = "fd --type file --follow";
-        defaultOptions = [ "--height 20%" ];
+        defaultOptions = ["--height 20%"];
         fileWidgetCommand = "fd --type file --follow";
       };
 
-      gpg = {
+      # GPG + Yubikey scdaemon: Darwin only (containers sign over SSH, secrets via sops).
+      gpg = lib.mkIf pkgs.stdenv.isDarwin {
         enable = true;
         publicKeys = [
           {
@@ -47,12 +56,14 @@ let
 
       ssh = {
         enable = true;
-        matchBlocks = import ../secrets/ssh.nix;
+        matchBlocks =
+          if pkgs.stdenv.isDarwin
+          then import ../secrets/ssh.nix
+          else p.sshMatchBlocks;
       };
     };
   };
-in
-[
+in [
   ./git
   ./fish
   ./tmux

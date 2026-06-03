@@ -1,11 +1,17 @@
 {
   config,
   pkgs,
+  lib,
+  profile ? {},
   ...
 }: let
-  parloaSecrets = import ../../secrets/parloa.nix;
+  defaults = import ../../lib/profile-defaults.nix;
+  p = lib.recursiveUpdate defaults profile;
+  g = p.git;
 
-  gitConfig = {
+  rg = "${pkgs.ripgrep}/bin/rg";
+
+  baseConfig = {
     core = {
       editor = "nvim";
       pager = "diff-so-fancy | less --tabs=4 -RFX";
@@ -27,7 +33,50 @@
     };
   };
 
-  rg = "${pkgs.ripgrep}/bin/rg";
+  # NOTE: `//` is a shallow merge. Build each nested attr (`user`, `gpg`) in ONE
+  # place so sub-keys aren't clobbered. `gpg.format` is emitted only for ssh —
+  # openpgp is git's default, so omitting it keeps the Darwin config byte-identical.
+  identityConfig = let
+    s = g.signing;
+    emitFormat = s.enable && s.format == "ssh";
+  in
+    {
+      user =
+        {
+          email = g.userEmail;
+          name = g.userName;
+        }
+        // lib.optionalAttrs (s.enable && s.key != null) {
+          signingkey = s.key;
+        };
+    }
+    // lib.optionalAttrs s.enable {
+      commit.gpgsign = s.signByDefault;
+    }
+    // lib.optionalAttrs emitFormat {
+      gpg =
+        {format = "ssh";}
+        // lib.optionalAttrs (s.allowedSignersFile != null) {
+          ssh.allowedSignersFile = s.allowedSignersFile;
+        };
+    };
+
+  aliases = {
+    amend = "commit --amend -m";
+    fixup = "!f(){ git reset --soft HEAD~\${1} && git commit --amend -C HEAD; };f";
+    loc = "!f(){ git ls-files | ${rg} \"\\.\${1}\" | xargs wc -l; };f";
+    br = "branch";
+    co = "checkout";
+    st = "status";
+    ls = "log --pretty=format:\"%C(yellow)%h%Cred%d\\\\ %Creset%s%Cblue\\\\ [%cn]\" --decorate";
+    ll = "log --pretty=format:\"%C(yellow)%h%Cred%d\\\\ %Creset%s%Cblue\\\\ [%cn]\" --decorate --numstat";
+    cm = "commit -m";
+    ca = "commit -am";
+    dc = "diff --cached";
+    lg = "log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative";
+    amm = "commit --amend";
+    mr = "merge --ff-only";
+  };
 in {
   home.packages = with pkgs; [
     diff-so-fancy
@@ -36,41 +85,16 @@ in {
     tig
   ];
 
-  # Copy Parloa-specific Git config to the right location
-  home.file.".config/git/parloa.gitconfig".text = parloaSecrets.gitConfig;
+  # Extra gitconfig files written under ~/.config/git/ (e.g. Parloa's).
+  home.file =
+    lib.mapAttrs'
+    (name: text: lib.nameValuePair ".config/git/${name}" {inherit text;})
+    g.extraGitconfigFiles;
 
   programs.git = {
     enable = true;
-    settings = gitConfig // {
-      alias = {
-        amend = "commit --amend -m";
-        fixup = "!f(){ git reset --soft HEAD~\${1} && git commit --amend -C HEAD; };f";
-        loc = "!f(){ git ls-files | ${rg} \"\\.\${1}\" | xargs wc -l; };f";
-        br = "branch";
-        co = "checkout";
-        st = "status";
-        ls = "log --pretty=format:\"%C(yellow)%h%Cred%d\\\\ %Creset%s%Cblue\\\\ [%cn]\" --decorate";
-        ll = "log --pretty=format:\"%C(yellow)%h%Cred%d\\\\ %Creset%s%Cblue\\\\ [%cn]\" --decorate --numstat";
-        cm = "commit -m";
-        ca = "commit -am";
-        dc = "diff --cached";
-        lg = "log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative";
-        amm = "commit --amend";
-        mr = "merge --ff-only";
-      };
-      user = {
-        email = "mwadon@evojam.com";
-        name = "Marcin Wadon";
-      };
-      commit.gpgsign = true;
-      user.signingkey = "23E5A318AE8D2861";
-    };
-    includes = [
-      {
-        condition = "gitdir:${parloaSecrets.projectPath}";
-        path = "~/.config/git/parloa.gitconfig";
-      }
-    ];
+    settings = baseConfig // identityConfig // {alias = aliases;};
+    includes = g.includes;
     ignores = [
       "*.bloop"
       "*.bsp"
