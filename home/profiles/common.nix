@@ -16,6 +16,4 @@
       allowedSignersFile = "/run/secrets/allowed_signers";
     };
   };
-
-  githubTokenFile = "/run/secrets/github_token";
 }

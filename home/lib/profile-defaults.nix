@@ -32,9 +32,7 @@
   # SSH client config (home-manager programs.ssh.matchBlocks).
   sshMatchBlocks = {};
 
-  # Runtime path to a GitHub token file (sops-provisioned on Linux); null on Darwin.
-  githubTokenFile = null;
-
   # Build-time GitHub token (Darwin only, from git-crypt secret); null elsewhere.
+  # Containers use `gh auth login` interactively instead of a baked token.
   githubToken = null;
 }
