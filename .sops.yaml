@@ -3,7 +3,7 @@
 # (see docs/RUNBOOK-lxc.md).
 keys:
   - &personal_host age13hmdfmjl4wr5fs6p895jenjwqtvfwd2t4enlv5z7arqq3yh7kveqs7ggdt
-  - &evojam_host age1PLACEHOLDER_EVOJAM
+  - &evojam_host age10ghgwh24ll7huwjtemgem5r382hcsg3wh9pszcqtthq0uxjk4e5swgsyr6
   - &parloa_host age1ae5733gn4a9kjl8jjj6wnkp6xd03v2r5dqe6yre24qh3mev7jazqru4zlh
 creation_rules:
   - path_regex: secrets/personal\.yaml$
