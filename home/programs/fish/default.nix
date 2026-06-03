@@ -2,8 +2,17 @@
   config,
   pkgs,
   lib,
+  profile ? {},
   ...
 }: let
+  defaults = import ../../lib/profile-defaults.nix;
+  p = lib.recursiveUpdate defaults profile;
+
+  tokenInit = lib.optionalString (pkgs.stdenv.isLinux && p.githubTokenFile != null) ''
+    if test -r ${p.githubTokenFile}
+      set -gx GITHUB_TOKEN (cat ${p.githubTokenFile})
+    end
+  '';
   fzfConfig = ''
     set -x FZF_DEFAULT_OPTS "--preview='bat {} --color=always'" \n
     set -x SKIM_DEFAULT_COMMAND "rg --files || fd || find ."
@@ -59,9 +68,11 @@ in {
   programs.fish = {
     enable = true;
     plugins = [custom.theme fenv z];
-    interactiveShellInit = ''
-      any-nix-shell fish --info-right | source
-    '';
+    interactiveShellInit =
+      ''
+        any-nix-shell fish --info-right | source
+      ''
+      + tokenInit;
     shellAliases = {
       cat = "bat";
       dc = "docker-compose";
