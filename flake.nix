@@ -71,6 +71,10 @@
 
     darwinConfigurations = import ./outputs/darwin-conf.nix {inherit inputs;};
 
+    nixosConfigurations = import ./outputs/nixos-conf.nix {inherit inputs;};
+
+    formatter.x86_64-linux = inputs.nixpkgs.legacyPackages.x86_64-linux.alejandra;
+
     formatter.${system} = pkgs.alejandra;
 
     devShells.${system} = {

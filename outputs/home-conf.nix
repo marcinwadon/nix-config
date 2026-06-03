@@ -10,17 +10,19 @@
       fish = pkgs-stable.fish;
     };
 
+  mkOverlays = system: [
+    (mkFishOverlay system)
+    inputs.claude-code.overlays.default
+    inputs.nurpkgs.overlays.default
+    inputs.neovim-flake.overlays.${system}.default
+    inputs.neovim-nightly-overlay.overlays.default
+  ];
+
   mkPkgs = system:
     import inputs.nixpkgs {
       inherit system;
       config.allowUnfree = true;
-      overlays = [
-        (mkFishOverlay system)
-        inputs.claude-code.overlays.default
-        inputs.nurpkgs.overlays.default
-        inputs.neovim-flake.overlays.${system}.default
-        inputs.neovim-nightly-overlay.overlays.default
-      ];
+      overlays = mkOverlays system;
     };
 
   mkHome = {
@@ -37,7 +39,7 @@
     };
 in {
   # Exposed builders so the NixOS layer can reuse the same module set.
-  inherit mkHome mkPkgs;
+  inherit mkHome mkPkgs mkOverlays;
 
   # Darwin standalone home configuration (unchanged behavior).
   homeConfigurations.marcinwadon = mkHome {
