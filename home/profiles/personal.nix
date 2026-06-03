@@ -5,5 +5,5 @@ in
   // {
     enableConstellationScripts = true;
     enableBspCleanup = true;
-    git = common.git // {userEmail = "PERSONAL_EMAIL_PLACEHOLDER";};
+    git = common.git // {userEmail = "marcin.wadon@gmail.com";};
   }
