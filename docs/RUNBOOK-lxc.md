@@ -18,7 +18,7 @@
 1. `pct enter <vmid>` (or SSH in).
 2. Get the age recipient from the host key:
    `nix-shell -p ssh-to-age --run 'ssh-to-age < /etc/ssh/ssh_host_ed25519_key.pub'`
-3. On your workstation: paste that age key into `secrets/.sops.yaml` for this env,
+3. On your workstation: paste that age key into `.sops.yaml` for this env,
    replacing the matching `age1PLACEHOLDER_*`.
 4. Create the env's secrets file: `sops secrets/<env>.yaml` → add keys:
    - `github_token`: a GitHub PAT for this env's account.

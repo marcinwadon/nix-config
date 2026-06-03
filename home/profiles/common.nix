@@ -10,7 +10,8 @@
     signing = {
       enable = true;
       format = "ssh";
-      key = "/run/secrets/ssh_signing_key.pub";
+      # Private key path — git/ssh-keygen signs directly with it (headless, no agent).
+      key = "/run/secrets/ssh_signing_key";
       signByDefault = true;
       allowedSignersFile = "/run/secrets/allowed_signers";
     };

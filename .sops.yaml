@@ -2,7 +2,7 @@
 # (ssh-to-age). Fill the age1... values after each container's first boot
 # (see docs/RUNBOOK-lxc.md).
 keys:
-  - &personal_host age1PLACEHOLDER_PERSONAL
+  - &personal_host age13hmdfmjl4wr5fs6p895jenjwqtvfwd2t4enlv5z7arqq3yh7kveqs7ggdt
   - &evojam_host age1PLACEHOLDER_EVOJAM
   - &parloa_host age1PLACEHOLDER_PARLOA
 creation_rules:
