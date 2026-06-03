@@ -73,6 +73,24 @@
 
     nixosConfigurations = import ./outputs/nixos-conf.nix {inherit inputs;};
 
+    # Guard: fail `nix flake check` if any Linux container's fish config leaks a
+    # GitHub token literal or runs the gpg-agent (gpgconf) — the class of bug a
+    # code review caught earlier. Eval-only over the x86_64-linux configs, so it
+    # runs on the darwin build host without a Linux builder.
+    checks.${system}.no-linux-secret-leak = let
+      lib = inputs.nixpkgs.lib;
+      forbidden = ["ghp_" "ghs_" "github_pat_" "gpgconf"];
+      rendered = lib.concatMapStringsSep "\n" (e: let
+        f = self.nixosConfigurations.${e}.config.home-manager.users.marcin.programs.fish;
+      in
+        (f.shellInit or "") + "\n" + (f.interactiveShellInit or ""))
+      ["personal" "evojam" "parloa"];
+      hits = lib.filter (p: lib.hasInfix p rendered) forbidden;
+    in
+      if hits == []
+      then pkgs.runCommand "no-linux-secret-leak" {} "echo ok > $out"
+      else throw "SECRET LEAK in linux fish config — matched: ${toString hits}";
+
     packages.x86_64-linux.lxcTemplate = inputs.nixos-generators.nixosGenerate {
       system = "x86_64-linux";
       format = "proxmox-lxc";
