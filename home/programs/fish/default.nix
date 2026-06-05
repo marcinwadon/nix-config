@@ -11,6 +11,10 @@
   zellijAutoAttach = lib.optionalString pkgs.stdenv.isLinux ''
     if status is-interactive; and not set -q ZELLIJ; and not set -q TMUX
       zellij attach --create main
+      # When zellij exits cleanly (detach, or `exit` of the last pane), log out
+      # the outer login shell too — otherwise it dangles at a prompt. On a zellij
+      # startup failure (non-zero) we fall through to a usable shell to debug.
+      and exit
     end
   '';
 
