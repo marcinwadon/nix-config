@@ -1,0 +1,37 @@
+// Minimal layout for the Linux containers: a single thin status line showing
+// only the current mode + tab names. No session/datetime, no pane borders
+// (pane_frames false in config-linux.kdl), no swap layouts.
+layout {
+    default_tab_template {
+        pane size=1 borderless=true {
+            plugin location="file:~/.config/zellij/plugins/zjstatus.wasm" {
+                format_left   "{mode}#[bg=#2e3440] {tabs}"
+                format_center ""
+                format_right  ""
+                format_space  "#[bg=#2e3440]"
+
+                hide_frame_for_single_pane "true"
+
+                mode_normal        "#[bg=#a3be8c,fg=#2e3440,bold] NORMAL "
+                mode_tmux          "#[bg=#d08770,fg=#2e3440,bold] TMUX "
+                mode_locked        "#[bg=#bf616a,fg=#2e3440,bold] LOCKED "
+                mode_scroll        "#[bg=#ebcb8b,fg=#2e3440,bold] SCROLL "
+                mode_enter_search  "#[bg=#ebcb8b,fg=#2e3440,bold] SEARCH "
+                mode_search        "#[bg=#ebcb8b,fg=#2e3440,bold] SEARCH "
+                mode_resize        "#[bg=#b48ead,fg=#2e3440,bold] RESIZE "
+                mode_pane          "#[bg=#81a1c1,fg=#2e3440,bold] PANE "
+                mode_tab           "#[bg=#81a1c1,fg=#2e3440,bold] TAB "
+                mode_rename_tab    "#[bg=#81a1c1,fg=#2e3440,bold] RENAME "
+                mode_rename_pane   "#[bg=#81a1c1,fg=#2e3440,bold] RENAME "
+                mode_move          "#[bg=#b48ead,fg=#2e3440,bold] MOVE "
+                mode_session       "#[bg=#88c0d0,fg=#2e3440,bold] SESSION "
+                mode_prompt        "#[bg=#88c0d0,fg=#2e3440,bold] PROMPT "
+
+                tab_normal    "#[bg=#2e3440,fg=#616e88] {name} "
+                tab_active    "#[bg=#2e3440,fg=#81a1c1,bold] {name} "
+                tab_separator "#[bg=#2e3440] "
+            }
+        }
+        children
+    }
+}
