@@ -16,4 +16,5 @@ in {
   personal = mkEnv "personal" (import ../home/profiles/personal.nix);
   evojam = mkEnv "evojam" (import ../home/profiles/evojam.nix);
   parloa = mkEnv "parloa" (import ../home/profiles/parloa.nix);
+  monitor = mkEnv "monitor" (import ../home/profiles/monitor.nix);
 }

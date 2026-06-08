@@ -69,6 +69,27 @@
         "type": "github"
       }
     },
+    "claude-monitor": {
+      "inputs": {
+        "flake-utils": "flake-utils_2",
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1780922657,
+        "narHash": "sha256-T7WToW+yOceGzz9QyA/LUYX51woxAbibtRp1KjePBio=",
+        "owner": "marcinwadon",
+        "repo": "claude-monitor",
+        "rev": "6b9d2ca20551d5ad6c05c13e2abb3577eae3f0e3",
+        "type": "github"
+      },
+      "original": {
+        "owner": "marcinwadon",
+        "repo": "claude-monitor",
+        "type": "github"
+      }
+    },
     "cmp-buffer": {
       "flake": false,
       "locked": {
@@ -400,6 +421,24 @@
         "systems": "systems_3"
       },
       "locked": {
+        "lastModified": 1731533236,
+        "narHash": "sha256-l0KFg5HjrsfsO/JpG+r7fRrqm12kzFHyUHqHCVpMMbI=",
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "rev": "11707dc2f618dd54ca8739b309ec4fc024de578b",
+        "type": "github"
+      },
+      "original": {
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "type": "github"
+      }
+    },
+    "flake-utils_4": {
+      "inputs": {
+        "systems": "systems_4"
+      },
+      "locked": {
         "lastModified": 1710146030,
         "narHash": "sha256-SZ5L6eA7HJ/nmkzGG7/ISclqe6oZdOZTNoesiInkXPQ=",
         "owner": "numtide",
@@ -688,7 +727,7 @@
         "dial-nvim": "dial-nvim",
         "diffview": "diffview",
         "flake-schemas": "flake-schemas",
-        "flake-utils": "flake-utils_2",
+        "flake-utils": "flake-utils_3",
         "gitsigns-nvim": "gitsigns-nvim",
         "glow-nvim": "glow-nvim",
         "harpoon": "harpoon",
@@ -889,7 +928,7 @@
     "nix-search": {
       "inputs": {
         "flake-compat": "flake-compat",
-        "flake-utils": "flake-utils_3",
+        "flake-utils": "flake-utils_4",
         "nixpkgs": [
           "nixpkgs"
         ]
@@ -1574,6 +1613,7 @@
     "root": {
       "inputs": {
         "claude-code": "claude-code",
+        "claude-monitor": "claude-monitor",
         "darwin": "darwin",
         "fish-bobthefish-theme": "fish-bobthefish-theme",
         "home-manager": "home-manager",
@@ -1703,6 +1743,21 @@
       }
     },
     "systems_3": {
+      "locked": {
+        "lastModified": 1681028828,
+        "narHash": "sha256-Vy1rq5AaRuLzOxct8nz4T6wlgyUR7zLU309k9mBC768=",
+        "owner": "nix-systems",
+        "repo": "default",
+        "rev": "da67096a3b9bf56a91d16901293e51ba5b49a27e",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-systems",
+        "repo": "default",
+        "type": "github"
+      }
+    },
+    "systems_4": {
       "locked": {
         "lastModified": 1681028828,
         "narHash": "sha256-Vy1rq5AaRuLzOxct8nz4T6wlgyUR7zLU309k9mBC768=",
