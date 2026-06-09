@@ -34,11 +34,11 @@
     [ -r "${tokenFile}" ] && export MONITOR_TOKEN="$(cat "${tokenFile}")"
     export MONITOR_URL="${p.monitorUrl}"
     export MONITOR_MACHINE="${toString machine}"
-    exec ${pkgs.claude-monitor}/bin/claude-monitor-hook
+    exec ${pkgs.claude-monitor-hook}/bin/claude-monitor-hook
   '';
 in
   lib.mkIf enable {
-    home.packages = [pkgs.claude-monitor];
+    home.packages = [pkgs.claude-monitor-hook];
 
     # Runs after claudeStatuslineSettings (same file) so that key is preserved.
     home.activation.claudeMonitorHooks = lib.hm.dag.entryAfter ["writeBoundary" "claudeStatuslineSettings"] ''

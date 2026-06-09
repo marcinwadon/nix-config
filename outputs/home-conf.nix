@@ -18,9 +18,13 @@
       (mkFishOverlay system)
       inputs.claude-code.overlays.default
       inputs.nurpkgs.overlays.default
-      # claude-monitor collector+hook (built from the marcinwadon/claude-monitor flake)
+      # claude-monitor packages (built from the marcinwadon/claude-monitor flake).
+      # Split: `claude-monitor` (collector, embeds the React UI) vs
+      # `claude-monitor-hook` (hook only, no frontend build) — hook machines use
+      # the latter so they never build the Vite app.
       (_final: _prev: {
-        claude-monitor = inputs.claude-monitor.packages.${system}.default;
+        claude-monitor = inputs.claude-monitor.packages.${system}.claude-monitor;
+        claude-monitor-hook = inputs.claude-monitor.packages.${system}.claude-monitor-hook;
       })
     ]
     ++ inputs.nixpkgs.lib.optionals (system == "aarch64-darwin") [
