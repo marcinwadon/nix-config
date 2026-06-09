@@ -2,9 +2,12 @@
 #
 # Enabled only when the profile sets `monitorMachine` (the collector-only
 # "monitor" box and any unconfigured profile leave it null → no-op). Installs
-# the hook binary and merges the five Claude Code lifecycle hooks into
+# the hook binary and merges the Claude Code lifecycle hooks into
 # ~/.claude/settings.json non-destructively (same jq-merge pattern as the
-# statusline activation), pointing each at a per-machine wrapper.
+# statusline activation), pointing each at a per-machine wrapper. PostToolUse is
+# wired so the collector sees mid-turn activity — without it, a session that
+# resumes after a permission/idle Notification stays "needs_attention" until the
+# turn ends, and the final assistant message can't be streamed early.
 #
 # The wrapper carries the non-secret MONITOR_URL/MONITOR_MACHINE as literals and
 # reads MONITOR_TOKEN from a file at RUNTIME — sops (/run/secrets/monitor_token)
@@ -52,6 +55,7 @@ in
         .hooks = ((.hooks // {})
           | .SessionStart     = [{"hooks":[{"type":"command","command":$cmd}]}]
           | .UserPromptSubmit = [{"hooks":[{"type":"command","command":$cmd}]}]
+          | .PostToolUse      = [{"hooks":[{"type":"command","command":$cmd}]}]
           | .Stop             = [{"hooks":[{"type":"command","command":$cmd}]}]
           | .Notification     = [{"hooks":[{"type":"command","command":$cmd}]}]
           | .SessionEnd       = [{"hooks":[{"type":"command","command":$cmd}]}])
