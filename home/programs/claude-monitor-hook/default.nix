@@ -36,30 +36,68 @@
     export MONITOR_MACHINE="${toString machine}"
     exec ${pkgs.claude-monitor-hook}/bin/claude-monitor-hook
   '';
-in
-  lib.mkIf enable {
-    home.packages = [pkgs.claude-monitor-hook];
 
-    # Runs after claudeStatuslineSettings (same file) so that key is preserved.
-    home.activation.claudeMonitorHooks = lib.hm.dag.entryAfter ["writeBoundary" "claudeStatuslineSettings"] ''
-      SETTINGS="$HOME/.claude/settings.json"
-      TMP=$(mktemp)
-      BASE="$TMP.base"
-      if [ -f "$SETTINGS" ] && [ ! -L "$SETTINGS" ]; then
-        SRC="$SETTINGS"
-      else
-        echo '{}' > "$BASE"
-        SRC="$BASE"
-      fi
-      ${pkgs.jq}/bin/jq --arg cmd '${wrapper}' '
-        .hooks = ((.hooks // {})
-          | .SessionStart     = [{"hooks":[{"type":"command","command":$cmd}]}]
-          | .UserPromptSubmit = [{"hooks":[{"type":"command","command":$cmd}]}]
-          | .PostToolUse      = [{"hooks":[{"type":"command","command":$cmd}]}]
-          | .Stop             = [{"hooks":[{"type":"command","command":$cmd}]}]
-          | .Notification     = [{"hooks":[{"type":"command","command":$cmd}]}]
-          | .SessionEnd       = [{"hooks":[{"type":"command","command":$cmd}]}])
-      ' "$SRC" > "$TMP" && mv "$TMP" "$SETTINGS"
-      rm -f "$BASE"
-    '';
-  }
+  # The tailer is a long-running service (not a hook): it fsnotify-watches active
+  # transcript files and streams content in near-real-time. Same env contract as
+  # the hook wrapper.
+  tailWrapper = pkgs.writeShellScript "claude-monitor-tail-wrapper" ''
+    [ -r "${tokenFile}" ] && export MONITOR_TOKEN="$(cat "${tokenFile}")"
+    export MONITOR_URL="${p.monitorUrl}"
+    export MONITOR_MACHINE="${toString machine}"
+    exec ${pkgs.claude-monitor-hook}/bin/claude-monitor-tail
+  '';
+in
+  lib.mkIf enable (lib.mkMerge [
+    {
+      home.packages = [pkgs.claude-monitor-hook];
+
+      # Runs after claudeStatuslineSettings (same file) so that key is preserved.
+      home.activation.claudeMonitorHooks = lib.hm.dag.entryAfter ["writeBoundary" "claudeStatuslineSettings"] ''
+        SETTINGS="$HOME/.claude/settings.json"
+        TMP=$(mktemp)
+        BASE="$TMP.base"
+        if [ -f "$SETTINGS" ] && [ ! -L "$SETTINGS" ]; then
+          SRC="$SETTINGS"
+        else
+          echo '{}' > "$BASE"
+          SRC="$BASE"
+        fi
+        ${pkgs.jq}/bin/jq --arg cmd '${wrapper}' '
+          .hooks = ((.hooks // {})
+            | .SessionStart     = [{"hooks":[{"type":"command","command":$cmd}]}]
+            | .UserPromptSubmit = [{"hooks":[{"type":"command","command":$cmd}]}]
+            | .PostToolUse      = [{"hooks":[{"type":"command","command":$cmd}]}]
+            | .Stop             = [{"hooks":[{"type":"command","command":$cmd}]}]
+            | .Notification     = [{"hooks":[{"type":"command","command":$cmd}]}]
+            | .SessionEnd       = [{"hooks":[{"type":"command","command":$cmd}]}])
+        ' "$SRC" > "$TMP" && mv "$TMP" "$SETTINGS"
+        rm -f "$BASE"
+      '';
+    }
+    # Linux CTs: systemd user service (needs lingering for marcin — set in
+    # lxc-base). Gated on `machine` (a pure profile value), NOT pkgs.stdenv:
+    # deciding module structure off pkgs.stdenv forces config.nixpkgs and
+    # infinite-recurses. machine=="mac" is the darwin proxy (only the Mac sets it).
+    (lib.optionalAttrs (enable && machine != "mac") {
+      systemd.user.services.claude-monitor-tail = {
+        Unit.Description = "claude-monitor transcript tailer";
+        Service = {
+          ExecStart = "${tailWrapper}";
+          Restart = "on-failure";
+          RestartSec = 3;
+        };
+        Install.WantedBy = ["default.target"];
+      };
+    })
+    # Mac: launchd agent.
+    (lib.optionalAttrs (machine == "mac") {
+      launchd.agents.claude-monitor-tail = {
+        enable = true;
+        config = {
+          ProgramArguments = ["${tailWrapper}"];
+          RunAtLoad = true;
+          KeepAlive = true;
+        };
+      };
+    })
+  ])
