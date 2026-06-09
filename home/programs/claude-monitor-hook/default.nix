@@ -31,7 +31,7 @@
     else "${config.home.homeDirectory}/.config/claude-monitor/token";
 
   wrapper = pkgs.writeShellScript "claude-monitor-hook-wrapper" ''
-    [ -r "${tokenFile}" ] && export MONITOR_TOKEN="$(cat "${tokenFile}")"
+    [ -r "${tokenFile}" ] && export MONITOR_TOKEN="$(<"${tokenFile}")"
     export MONITOR_URL="${p.monitorUrl}"
     export MONITOR_MACHINE="${toString machine}"
     exec ${pkgs.claude-monitor-hook}/bin/claude-monitor-hook
@@ -41,7 +41,7 @@
   # transcript files and streams content in near-real-time. Same env contract as
   # the hook wrapper.
   tailWrapper = pkgs.writeShellScript "claude-monitor-tail-wrapper" ''
-    [ -r "${tokenFile}" ] && export MONITOR_TOKEN="$(cat "${tokenFile}")"
+    [ -r "${tokenFile}" ] && export MONITOR_TOKEN="$(<"${tokenFile}")"
     export MONITOR_URL="${p.monitorUrl}"
     export MONITOR_MACHINE="${toString machine}"
     exec ${pkgs.claude-monitor-hook}/bin/claude-monitor-tail
