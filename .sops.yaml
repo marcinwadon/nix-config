@@ -7,7 +7,7 @@ keys:
   - &parloa_host age1ae5733gn4a9kjl8jjj6wnkp6xd03v2r5dqe6yre24qh3mev7jazqru4zlh
   # Fill after the monitor CT's first boot (ssh-to-age of its host key), then
   # `sops secrets/monitor.yaml` to add monitor_token. See docs/RUNBOOK-lxc.md.
-  - &monitor_host age1REPLACE_AFTER_MONITOR_CT_FIRST_BOOT
+  - &monitor_host age156az0q4tpeqqdhjjs362txx8eatzwnwra2cka2k5vzwsrftzrgxqhgmty4
 creation_rules:
   - path_regex: secrets/personal\.yaml$
     key_groups: [{age: [*personal_host]}]
