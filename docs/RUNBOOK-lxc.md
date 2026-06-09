@@ -147,4 +147,98 @@ Edit the flake on the Mac → rsync (§3) → `./switch nixos <env>` on the CT.
 
 ---
 
+## claude-monitor — collector LXC + hook rollout
+
+A fourth env, `monitor`, runs the [claude-monitor](https://github.com/marcinwadon/claude-monitor)
+collector + dashboard; the `personal`/`evojam`/`parloa` envs and the Mac get the
+hook that reports session state to it. Read-only Phase 1 (no reply path).
+
+**Topology:** collector on the `monitor` CT at `http://10.0.1.123:8787` (LAN-only,
+firewalled to 8787). Hooks POST events; all five lifecycle events are wired via a
+per-machine wrapper merged into `~/.claude/settings.json`. Shared `MONITOR_TOKEN`
+distributed by sops (a runtime file on the Mac, which has no sops).
+
+### Prereq — private flake input needs a GitHub token for nix
+
+`claude-monitor` is a **private** repo, fetched by nix's github fetcher. Both the
+Mac (for `nix flake lock`/eval) and the x86_64 builder (for the real build) need a
+token with `repo` scope:
+
+```
+# one-off per host: either pass --option, or add to nix.conf / NIX_CONFIG
+export NIX_CONFIG="access-tokens = github.com=ghp_xxx"
+```
+
+On the builder CT add `access-tokens = github.com=ghp_xxx` to `/etc/nix/nix.conf`.
+To bump the pinned version after pushing to claude-monitor:
+`NIX_CONFIG="access-tokens = github.com=ghp_xxx" nix flake lock --update-input claude-monitor`.
+
+### 1. Create the monitor CT + its age key
+
+Create an unprivileged CT from the LXC template (see §1–§5) with IP `10.0.1.123`.
+After first boot, derive its age key and fill `.sops.yaml`:
+
+```
+ssh root@10.0.1.123 'cat /etc/ssh/ssh_host_ed25519_key.pub' | ssh-to-age
+# put the age1... value into .sops.yaml's &monitor_host (replacing the placeholder)
+```
+
+### 2. Mint + distribute the shared token (sops)
+
+Generate one token and place it (same value) in **all four** sops files under key
+`monitor_token`. The collector reads it via systemd `LoadCredential`; the three
+hook CTs expose it to `marcin` at `/run/secrets/monitor_token`.
+
+```
+TOKEN=$(openssl rand -hex 24)
+for f in monitor personal evojam parloa; do
+  sops --set "[\"monitor_token\"] \"$TOKEN\"" secrets/$f.yaml
+done
+```
+
+`secrets/monitor.yaml` currently holds a **placeholder** committed only so the
+config evaluates pre-deploy — overwrite it with the real encrypted value above
+(it must be encrypted to `&monitor_host`).
+
+On the **Mac** (no sops), write the same token to a file the hook wrapper reads:
+
+```
+mkdir -p ~/.config/claude-monitor && printf '%s' "$TOKEN" > ~/.config/claude-monitor/token && chmod 600 ~/.config/claude-monitor/token
+```
+
+### 3. Build + deploy
+
+```
+# rsync the flake to the builder (§3), then on the builder/CTs:
+nixos-rebuild switch --flake .#monitor    # collector CT
+nixos-rebuild switch --flake .#personal   # + evojam, parloa — installs the hook
+# on the Mac:
+./switch home                             # installs the hook on darwin
+```
+
+### 4. Verify
+
+```
+curl -s http://10.0.1.123:8787/api/sessions      # [] until a session reports in
+```
+
+Open `http://10.0.1.123:8787/` from any LAN host. Start a Claude session on each
+machine → rows appear grouped by machine, status running→waiting→needs_attention
+→closed, click a row for the timeline. The hook is fail-silent: a down collector
+or missing token never blocks or slows a Claude session.
+
+### Notes
+
+- **Per-machine wrapper** carries `MONITOR_URL`/`MONITOR_MACHINE` (non-secret)
+  and reads the token from a file at runtime — nothing secret in the Nix store.
+  `monitorMachine` in each `home/profiles/*.nix` drives it; `null` (the monitor
+  box) installs no hook.
+- **`~/.claude/settings.json` is merged, not clobbered** — the `claudeMonitorHooks`
+  home-manager activation runs after `claudeStatuslineSettings` and only sets the
+  `.hooks` key via `jq`, preserving the rest.
+- **Adding `monitor` to the env list didn't trip the leak guard** — the collector
+  box has no token in its fish config.
+
+---
+
 *Generated with Claude AI — please review before distribution.*

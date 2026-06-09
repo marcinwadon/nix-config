@@ -61,6 +61,14 @@
       url = "github:nix-community/nixos-generators";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    # Private repo — fetched via nix's github fetcher. Locking (here) and the
+    # builder both need a token: `--option access-tokens github.com=<ghp_…>`
+    # (or an access-tokens line in nix.conf). See docs/RUNBOOK-lxc.md.
+    claude-monitor = {
+      url = "github:marcinwadon/claude-monitor";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = {self, ...} @ inputs: let
@@ -84,7 +92,7 @@
         f = self.nixosConfigurations.${e}.config.home-manager.users.marcin.programs.fish;
       in
         (f.shellInit or "") + "\n" + (f.interactiveShellInit or ""))
-      ["personal" "evojam" "parloa"];
+      ["personal" "evojam" "parloa" "monitor"];
       hits = lib.filter (p: lib.hasInfix p rendered) forbidden;
     in
       if hits == []

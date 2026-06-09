@@ -18,6 +18,10 @@
       (mkFishOverlay system)
       inputs.claude-code.overlays.default
       inputs.nurpkgs.overlays.default
+      # claude-monitor collector+hook (built from the marcinwadon/claude-monitor flake)
+      (_final: _prev: {
+        claude-monitor = inputs.claude-monitor.packages.${system}.default;
+      })
     ]
     ++ inputs.nixpkgs.lib.optionals (system == "aarch64-darwin") [
       inputs.neovim-flake.overlays.${system}.default

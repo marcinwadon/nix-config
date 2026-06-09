@@ -7,6 +7,10 @@ in {
 
   githubToken = import ../secrets/github;
 
+  # claude-monitor hook on the Mac. Token comes from ~/.config/claude-monitor/token
+  # at runtime (no sops on darwin); the wrapper reads it if present.
+  monitorMachine = "mac";
+
   enableConstellationScripts = true;
   enableBspCleanup = true;
 

@@ -88,5 +88,6 @@ in [
   ./zellij
   neovim
   ./claude-code
+  ./claude-monitor-hook
   more
 ]
