@@ -85,7 +85,7 @@
   cmAcp = pkgs.writeShellScriptBin "cm-acp" ''
     export MONITOR_URL="${p.monitorUrl}"
     export MONITOR_MACHINE="${toString machine}"
-    exec ${pkgs.claude-monitor-hook}/bin/cm-acp "$@"
+    exec ${pkgs.claude-monitor-hook}/bin/claude-monitor-cm-acp "$@"
   '';
 in
   lib.mkIf enable (lib.mkMerge [
