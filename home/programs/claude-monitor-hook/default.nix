@@ -78,10 +78,19 @@
     unset CLAUDECODE CLAUDE_CODE_ENTRYPOINT CLAUDE_CODE_SSE_PORT
     exec ${pkgs.claude-monitor-hook}/bin/claude-monitor-host
   '';
+
+  # cm-acp: a user-run CLI that starts an ACP session on THIS machine rooted at
+  # $PWD (no path typing in the dashboard). Thin client over the collector's open
+  # POST /api/sessions, so it only needs the URL + machine name. Installed on PATH.
+  cmAcp = pkgs.writeShellScriptBin "cm-acp" ''
+    export MONITOR_URL="${p.monitorUrl}"
+    export MONITOR_MACHINE="${toString machine}"
+    exec ${pkgs.claude-monitor-hook}/bin/cm-acp "$@"
+  '';
 in
   lib.mkIf enable (lib.mkMerge [
     {
-      home.packages = [pkgs.claude-monitor-hook];
+      home.packages = [pkgs.claude-monitor-hook cmAcp];
 
       # Runs after claudeStatuslineSettings (same file) so that key is preserved.
       home.activation.claudeMonitorHooks = lib.hm.dag.entryAfter ["writeBoundary" "claudeStatuslineSettings"] ''
