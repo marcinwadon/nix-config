@@ -46,6 +46,21 @@
     export MONITOR_MACHINE="${toString machine}"
     exec ${pkgs.claude-monitor-hook}/bin/claude-monitor-tail
   '';
+
+  # The ACP host: a long-running service that spawns claude-code-acp on demand
+  # and bridges it to the collector. CLAUDE_ACP_CMD points at the nix-packaged
+  # adapter; ~/.local/bin is added so the adapter finds the user's `claude`
+  # (subscription auth); CLAUDECODE et al. are unset so claude doesn't refuse to
+  # launch "inside another Claude Code session" (the nesting guard).
+  hostWrapper = pkgs.writeShellScript "claude-monitor-host-wrapper" ''
+    [ -r "${tokenFile}" ] && export MONITOR_TOKEN="$(<"${tokenFile}")"
+    export MONITOR_URL="${p.monitorUrl}"
+    export MONITOR_MACHINE="${toString machine}"
+    export CLAUDE_ACP_CMD="${pkgs.claude-code-acp}/bin/claude-code-acp"
+    export PATH="$HOME/.local/bin:$PATH"
+    unset CLAUDECODE CLAUDE_CODE_ENTRYPOINT CLAUDE_CODE_SSE_PORT
+    exec ${pkgs.claude-monitor-hook}/bin/claude-monitor-host
+  '';
 in
   lib.mkIf enable (lib.mkMerge [
     {
@@ -88,13 +103,30 @@ in
         };
         Install.WantedBy = ["default.target"];
       };
+      systemd.user.services.claude-monitor-host = {
+        Unit.Description = "claude-monitor ACP host";
+        Service = {
+          ExecStart = "${hostWrapper}";
+          Restart = "on-failure";
+          RestartSec = 3;
+        };
+        Install.WantedBy = ["default.target"];
+      };
     })
-    # Mac: launchd agent.
+    # Mac: launchd agents.
     (lib.optionalAttrs (machine == "mac") {
       launchd.agents.claude-monitor-tail = {
         enable = true;
         config = {
           ProgramArguments = ["${tailWrapper}"];
+          RunAtLoad = true;
+          KeepAlive = true;
+        };
+      };
+      launchd.agents.claude-monitor-host = {
+        enable = true;
+        config = {
+          ProgramArguments = ["${hostWrapper}"];
           RunAtLoad = true;
           KeepAlive = true;
         };
