@@ -49,15 +49,32 @@
 
   # The ACP host: a long-running service that spawns claude-code-acp on demand
   # and bridges it to the collector. CLAUDE_ACP_CMD points at the nix-packaged
-  # adapter; ~/.local/bin is added so the adapter finds the user's `claude`
+  # adapter; ~/.local/bin is on PATH so the adapter finds the user's `claude`
   # (subscription auth); CLAUDECODE et al. are unset so claude doesn't refuse to
   # launch "inside another Claude Code session" (the nesting guard).
+  #
+  # PATH is built as an ABSOLUTE, full set rather than appended to the inherited
+  # one: a systemd user service starts with a near-empty PATH (just systemd/bin),
+  # so a bare append leaves no shell or coreutils — and tool calls run as
+  # `sh -c '<cmd>'`, which then fails to even start (exit -1, no output). Bake the
+  # system + user profile dirs so both the shell and the user's tools resolve, the
+  # way they would in an interactive session. Absolute (no $HOME/$USER reliance)
+  # because those may be unset in the minimal service environment.
+  hostPath = lib.concatStringsSep ":" [
+    "${config.home.homeDirectory}/.local/bin"
+    "${config.home.homeDirectory}/.nix-profile/bin"
+    "/etc/profiles/per-user/${config.home.username}/bin"
+    "/run/current-system/sw/bin"
+    "/run/wrappers/bin"
+    "/usr/bin"
+    "/bin"
+  ];
   hostWrapper = pkgs.writeShellScript "claude-monitor-host-wrapper" ''
     [ -r "${tokenFile}" ] && export MONITOR_TOKEN="$(<"${tokenFile}")"
     export MONITOR_URL="${p.monitorUrl}"
     export MONITOR_MACHINE="${toString machine}"
     export CLAUDE_ACP_CMD="${pkgs.claude-code-acp}/bin/claude-code-acp"
-    export PATH="$HOME/.local/bin:$PATH"
+    export PATH="${hostPath}:$PATH"
     unset CLAUDECODE CLAUDE_CODE_ENTRYPOINT CLAUDE_CODE_SSE_PORT
     exec ${pkgs.claude-monitor-hook}/bin/claude-monitor-host
   '';
