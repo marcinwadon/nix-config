@@ -25,8 +25,8 @@
       (_final: _prev: {
         claude-monitor = inputs.claude-monitor.packages.${system}.claude-monitor;
         claude-monitor-hook = inputs.claude-monitor.packages.${system}.claude-monitor-hook;
-        # The ACP adapter the per-machine host spawns (Zed's claude-code-acp).
-        claude-code-acp = inputs.claude-monitor.packages.${system}.claude-code-acp;
+        # The ACP adapter the per-machine host spawns (Zed's claude-agent-acp).
+        claude-agent-acp = inputs.claude-monitor.packages.${system}.claude-agent-acp;
       })
     ]
     ++ inputs.nixpkgs.lib.optionals (system == "aarch64-darwin") [
