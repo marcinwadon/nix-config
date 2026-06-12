@@ -77,11 +77,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1781219116,
-        "narHash": "sha256-OSb3QWSQufDJ6AF0HghsVrhA6+m3DWKPchc6T3Zj31M=",
+        "lastModified": 1781255717,
+        "narHash": "sha256-6PD90Wh5Tmkc360FgQOHzkOwC9Ezx1zQ4TAMqkJeXJo=",
         "owner": "marcinwadon",
         "repo": "claude-monitor",
-        "rev": "ef76f405e2c0f011e7e45414a6ae93e6c135f1c9",
+        "rev": "d625608771f2ccac84d4f66168e9065f3bc8c0ab",
         "type": "github"
       },
       "original": {
