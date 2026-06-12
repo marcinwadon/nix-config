@@ -9,8 +9,9 @@
   sops.age.sshKeyPaths = ["/etc/ssh/ssh_host_ed25519_key"];
   sops.secrets.monitor_token = {};
 
-  # LAN-only dashboard + ingest port.
-  networking.firewall.allowedTCPPorts = [8787];
+  # LAN-only: 8787 = HTTP machine plane (hosts dial ws://, hooks POST);
+  # 8443 = HTTPS for the browser/PWA (Service Workers need a secure context).
+  networking.firewall.allowedTCPPorts = [8787 8443];
 
   systemd.services.claude-monitor = {
     description = "claude-monitor collector + dashboard";
@@ -19,6 +20,13 @@
     serviceConfig = {
       ExecStart = pkgs.writeShellScript "claude-monitor-start" ''
         export MONITOR_TOKEN="$(cat "$CREDENTIALS_DIRECTORY/monitor_token")"
+        # Dual-listener: HTTP :8787 (machines) always; HTTPS :8443 (browser/PWA)
+        # with an auto self-signed cert. Cert + VAPID keys persist under the
+        # StateDirectory (/var/lib/claude-monitor/tls). Trust the cert once per
+        # device to install the PWA + receive Web Push.
+        export MONITOR_TLS_ENABLED=1
+        export MONITOR_TLS_ADDR=":8443"
+        export MONITOR_TLS_IP="10.0.1.123"
         exec ${pkgs.claude-monitor}/bin/claude-monitor -addr :8787 -db /var/lib/claude-monitor/cm.db
       '';
       # systemd reads the sops secret as root and exposes it to the (dynamic)
