@@ -1,5 +1,38 @@
-{ pkgs, lib, ... }:
+{ pkgs, lib, profile ? {}, ... }:
+let
+  shareConfig = profile.shareClaudeConfig or false;
+in
 {
+  # Shared Claude Code config (read-only, from the repo) on the coding CTs.
+  # Each file is symlinked individually (recursive = true) so the parent dirs
+  # stay real, writable directories — Claude Code can still drop its own files
+  # alongside ours (generated skills, plugin agents, etc.). The Mac is opted out
+  # (shareClaudeConfig stays false) so it keeps its own live ~/.claude.
+  # Dotted form + per-entry mkIf so these merge with the statusline.sh entry
+  # below (a single `home.file = {…}` literal would conflict with it).
+  home.file.".claude/CLAUDE.md" = lib.mkIf shareConfig { source = ./files/CLAUDE.md; };
+  home.file.".claude/skills"    = lib.mkIf shareConfig { source = ./files/skills;   recursive = true; };
+  home.file.".claude/commands"  = lib.mkIf shareConfig { source = ./files/commands; recursive = true; };
+  home.file.".claude/agents"    = lib.mkIf shareConfig { source = ./files/agents;   recursive = true; };
+
+  # Seed the memory-rule stubs as WRITABLE files (copy-if-absent), not symlinks,
+  # so the auto-update memory rule can append to them per-machine. The shared
+  # CLAUDE.md @-imports rules/memory-*.md; this guarantees those imports resolve
+  # on a fresh CT. Never clobbers files that already exist (grown memory wins).
+  home.activation.seedClaudeRules = lib.mkIf shareConfig (
+    lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+      RULES_DIR="$HOME/.claude/rules"
+      SEED_DIR=${./files/rules-seed}
+      mkdir -p "$RULES_DIR"
+      for seed in "$SEED_DIR"/*.md; do
+        dest="$RULES_DIR/$(basename "$seed")"
+        if [ ! -e "$dest" ]; then
+          install -m 0644 "$seed" "$dest"
+        fi
+      done
+    ''
+  );
+
   home.file.".claude/statusline.sh" = {
     executable = true;
     text = ''

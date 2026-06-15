@@ -86,6 +86,9 @@
   home-manager = {
     useGlobalPkgs = true;
     useUserPackages = true;
+    # Don't abort activation if a pre-existing ~/.claude file (skills, commands,
+    # agents) would be clobbered by a newly-managed symlink — back it up instead.
+    backupFileExtension = "hm-bak";
     extraSpecialArgs = {inherit profile;};
     users.marcin = {...}: {
       imports = homeModules ++ [../home/home.nix];

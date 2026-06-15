@@ -4,6 +4,11 @@
   enableConstellationScripts = false;
   enableBspCleanup = false;
 
+  # Share the Claude Code config (skills/commands/agents/CLAUDE.md + writable
+  # memory-rule stubs) on the Linux coding CTs. Darwin + the monitor box do not
+  # import this base, so they stay opted out.
+  shareClaudeConfig = true;
+
   # Authenticate to GitHub with the per-env signing key (no ssh-agent in the
   # container — point IdentityFile straight at the sops-provisioned private key).
   sshMatchBlocks = {

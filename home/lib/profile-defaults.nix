@@ -29,6 +29,13 @@
   enableConstellationScripts = false; # h_mainnet/h_testnet/h_integrationnet
   enableBspCleanup = false; # clean-bsp-workspace
 
+  # Symlink the shared Claude Code config (CLAUDE.md routing file + skills +
+  # commands + agents) into ~/.claude, and seed writable memory-rule stubs so
+  # the per-machine auto-update memory rule has structure to grow into. Enabled
+  # on the Linux coding CTs; left off on Darwin (the Mac keeps its own live,
+  # writable ~/.claude as the author) and on the collector-only monitor box.
+  shareClaudeConfig = false;
+
   # SSH client config (home-manager programs.ssh.matchBlocks).
   sshMatchBlocks = {};
 
