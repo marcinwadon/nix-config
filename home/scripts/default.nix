@@ -14,6 +14,9 @@ let
         (pkgs.callPackage ./clean-bsp-workspace.nix {})
       ]
       ++ [(pkgs.callPackage ./tmux-close.nix {})]
+      ++ lib.optionals p.isDarwin [
+        (pkgs.callPackage ./aws-evojam-mfa.nix {})
+      ]
       ++ lib.optionals p.enableConstellationScripts [
         (pkgs.callPackage ./h_mainnet.nix {})
         (pkgs.callPackage ./h_testnet.nix {})
