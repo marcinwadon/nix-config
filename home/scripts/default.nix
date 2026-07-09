@@ -16,6 +16,7 @@ let
       ++ [(pkgs.callPackage ./tmux-close.nix {})]
       ++ lib.optionals p.isDarwin [
         (pkgs.callPackage ./aws-evojam-mfa.nix {})
+        (pkgs.callPackage ./gpush.nix {})
       ]
       ++ lib.optionals p.enableConstellationScripts [
         (pkgs.callPackage ./h_mainnet.nix {})
