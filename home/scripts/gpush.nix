@@ -23,7 +23,7 @@ in
 
     origin="$(${git} remote get-url origin)"
     ownerrepo="$(printf '%s' "$origin" \
-      | sed -E 's#^git@github\.com:##; s#^https://github\.com/##; s#\.git$##')"
+      | sed -E 's#^git@github\.com:##; s#^ssh://git@github\.com/##; s#^https://github\.com/##; s#\.git$##; s#/$##')"
     case "$ownerrepo" in
       */*) : ;;
       *) echo "error: origin '$origin' is not a github.com remote" >&2; exit 1 ;;
@@ -61,7 +61,7 @@ in
     url="https://github.com/$owner/$repo.git"
 
     pinned_args=()
-    for a in "''${args[@]:-}"; do
+    for a in "''${args[@]}"; do
       if [ "$a" = "--force-with-lease" ]; then
         remote_sha="$(${git} -c credential.helper= -c credential.helper="$helper" \
           ls-remote "$url" "$branch" | awk '{print $1}')"
@@ -83,5 +83,5 @@ in
     fi
 
     ${git} -c credential.helper= -c credential.helper="$helper" \
-      push "$url" "$refspec" "''${pinned_args[@]:-}"
+      push "$url" "$refspec" "''${pinned_args[@]}"
   ''
