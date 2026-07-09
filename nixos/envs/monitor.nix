@@ -35,11 +35,22 @@
         export MONITOR_TLS_ENABLED=1
         export MONITOR_TLS_ADDR=":8443"
         export MONITOR_TLS_IP="10.0.1.123"
+        # Session auto-naming: title unnamed sessions from their first prompts via
+        # the operator's LiteLLM gateway — the SAME key/URL the orchestrator uses
+        # (reuses the existing llm_api_key/llm_base_url sops secrets). Unset → the
+        # collector silently skips auto-naming.
+        export LLM_API_KEY="$(cat "$CREDENTIALS_DIRECTORY/llm_api_key")"
+        export LLM_BASE_URL="$(cat "$CREDENTIALS_DIRECTORY/llm_base_url")"
+        export LLM_MODEL="claude-sonnet-4-6"
         exec ${pkgs.claude-monitor}/bin/claude-monitor -addr :8787 -db /var/lib/claude-monitor/cm.db
       '';
       # systemd reads the sops secret as root and exposes it to the (dynamic)
       # service user under $CREDENTIALS_DIRECTORY — no world-readable copy.
-      LoadCredential = ["monitor_token:/run/secrets/monitor_token"];
+      LoadCredential = [
+        "monitor_token:/run/secrets/monitor_token"
+        "llm_api_key:/run/secrets/llm_api_key"
+        "llm_base_url:/run/secrets/llm_base_url"
+      ];
       DynamicUser = true;
       StateDirectory = "claude-monitor"; # /var/lib/claude-monitor (db lives here)
       Restart = "on-failure";
