@@ -17,6 +17,7 @@ let
       ++ lib.optionals p.isDarwin [
         (pkgs.callPackage ./aws-evojam-mfa.nix {})
         (pkgs.callPackage ./gpush.nix {})
+        (pkgs.callPackage ./deploy-monitor.nix {})
       ]
       ++ lib.optionals p.enableConstellationScripts [
         (pkgs.callPackage ./h_mainnet.nix {})
