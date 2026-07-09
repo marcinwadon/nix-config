@@ -67,6 +67,11 @@
         # Non-secret config (safe in the public repo).
         export LLM_MODEL="claude-sonnet-4-6"
         export COLLECTOR_BASE_URL="http://localhost:8787"
+        # Per-machine workspace roots for natural-language launch ("run a session
+        # on mac in platform-fe …"). Absolute paths on the TARGET machine; the
+        # resolver joins a bare repo name onto the first root, so parloa is primary
+        # (other dirs need a full path in the launch). These are mac's paths.
+        export WORKSPACE_ROOTS="mac=/Users/marcinwadon/Projects/parloa,/Users/marcinwadon/Projects/marcinwadon,/Users/marcinwadon/Projects/evojam"
         # Policy file is optional: a missing path falls back to the built-in
         # aggressive default. Drop a policy.md here to override.
         export POLICY_PATH="/var/lib/claude-monitor-orchestrator/policy.md"
