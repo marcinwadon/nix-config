@@ -86,7 +86,6 @@ in [
   ./fish
   ./kitty
   ./tmux
-  ./zellij
   neovim
   ./claude-code
   ./claude-monitor-hook

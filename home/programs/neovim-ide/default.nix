@@ -18,18 +18,6 @@ let
     nvimRequireCheck = "agentic";
   };
 
-  zellij-nav = pkgs.vimUtils.buildVimPlugin {
-    pname = "zellij-nav-nvim";
-    version = "2025-01-22";
-    src = pkgs.fetchFromGitHub {
-      owner = "swaits";
-      repo = "zellij-nav.nvim";
-      rev = "91cc2a642d8927ebde50ced5bf71ba470a0fc116";
-      hash = "sha256-OoxvSmZV6MCYKrH2ijGqIYhdSZG5oaRj+NFJGt0viyk=";
-    };
-    nvimRequireCheck = "zellij-nav";
-  };
-
   nvim-highlight-colors = pkgs.vimUtils.buildVimPlugin {
     pname = "nvim-highlight-colors";
     version = "2025-09-06";
@@ -68,7 +56,7 @@ in
           render-markdown-nvim
           markdown-preview-nvim
         ];
-        startPlugins = [ agentic-nvim nvim-highlight-colors zellij-nav ];
+        startPlugins = [ agentic-nvim nvim-highlight-colors pkgs.vimPlugins.vim-tmux-navigator ];
         luaConfigRC = ''
           require("agentic").setup({
             provider = "claude-acp",
@@ -123,8 +111,12 @@ in
           }
           vim.lsp.enable('oxfmt')
 
-          -- zellij-nav: seamless navigation between nvim splits and zellij panes
-          require("zellij-nav").setup()
+          -- vim-tmux-navigator: seamless navigation between nvim splits and tmux
+          -- panes. Its default mappings are disabled because they also claim
+          -- <C-\> ("previous pane"), which is agentic.nvim's toggle below; the
+          -- four <C-hjkl> maps are declared explicitly in `keymaps`. This must be
+          -- set here in init.lua, which runs before start/ plugin scripts load.
+          vim.g.tmux_navigator_no_mappings = 1
 
           -- Set Visual highlight (visible blue)
           local function set_visual_hl()
@@ -257,11 +249,11 @@ in
           "<leader><leader>i" = "<cmd>!black %<CR>";
           "<leader><leader>u" = "<cmd>!isort %<CR>";
           "<leader><leader>y" = "<cmd>!autoflake -r --in-place --remove-unused-variables %<CR>";
-          # zellij-nav keymaps
-          "<C-h>" = "<cmd>ZellijNavigateLeft<CR>";
-          "<C-j>" = "<cmd>ZellijNavigateDown<CR>";
-          "<C-k>" = "<cmd>ZellijNavigateUp<CR>";
-          "<C-l>" = "<cmd>ZellijNavigateRight<CR>";
+          # vim-tmux-navigator keymaps (same keys as the old zellij-nav ones)
+          "<C-h>" = "<cmd>TmuxNavigateLeft<CR>";
+          "<C-j>" = "<cmd>TmuxNavigateDown<CR>";
+          "<C-k>" = "<cmd>TmuxNavigateUp<CR>";
+          "<C-l>" = "<cmd>TmuxNavigateRight<CR>";
           # agentic.nvim keymaps
           "<C-\\>" = "<cmd>lua require('agentic').toggle()<CR>";
           "<C-'>" = "<cmd>lua require('agentic').add_selection_or_file_to_context()<CR>";

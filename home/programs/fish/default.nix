@@ -5,14 +5,16 @@
   profile ? {},
   ...
 }: let
-  # Linux containers: drop into a detachable zellij session on interactive login
+  # Linux containers: drop into a detachable tmux session on interactive login
   # so claude (and everything else) runs inside it and survives mosh disconnects.
-  # Guarded against nesting (ZELLIJ/TMUX already set) and non-interactive shells.
-  zellijAutoAttach = lib.optionalString pkgs.stdenv.isLinux ''
-    if status is-interactive; and not set -q ZELLIJ; and not set -q TMUX
-      zellij attach --create main
-      # When zellij exits cleanly (detach, or `exit` of the last pane), log out
-      # the outer login shell too — otherwise it dangles at a prompt. On a zellij
+  # `new-session -A -s main` attaches to `main` if it exists and creates it
+  # otherwise — the direct equivalent of the old `zellij attach --create main`.
+  # Guarded against nesting (TMUX already set) and non-interactive shells.
+  tmuxAutoAttach = lib.optionalString pkgs.stdenv.isLinux ''
+    if status is-interactive; and not set -q TMUX
+      tmux new-session -A -s main
+      # When tmux exits cleanly (detach, or `exit` of the last pane), log out
+      # the outer login shell too — otherwise it dangles at a prompt. On a tmux
       # startup failure (non-zero) we fall through to a usable shell to debug.
       and exit
     end
@@ -80,7 +82,7 @@ in {
       ''
         any-nix-shell fish --info-right | source
       ''
-      + zellijAutoAttach;
+      + tmuxAutoAttach;
     shellAliases = {
       cat = "bat";
       dc = "docker-compose";
