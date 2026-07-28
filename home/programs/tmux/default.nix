@@ -27,6 +27,13 @@ in {
       ''
       + tmuxConf;
     escapeTime = 0;
+    # Scroll, click-to-select-pane, drag-to-resize. kitty forwards mouse events;
+    # note tmux then owns the mouse inside a session, so kitty's own text
+    # selection is superseded while a session is attached.
+    mouse = true;
+    # The default is 2000 lines, which a single verbose build or claude turn blows
+    # straight through.
+    historyLimit = 50000;
     keyMode = "vi";
     plugins = with plugins;
       [
@@ -34,7 +41,14 @@ in {
         nord # theme
         {
           plugin = resurrect;
-          extraConfig = "set -g @resurrect-strategy-nvim 'session'";
+          extraConfig = ''
+            set -g @resurrect-strategy-nvim 'session'
+            # Restore pane CONTENTS, not just the layout. Without this, continuum
+            # brings back an empty shell where a long-running session used to be —
+            # which matters most on the containers now that tmux is the login
+            # multiplexer and a pane holds hours of claude output.
+            set -g @resurrect-capture-pane-contents 'on'
+          '';
         }
         {
           plugin = continuum;
