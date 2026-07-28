@@ -84,6 +84,7 @@ let
 in [
   ./git
   ./fish
+  ./kitty
   ./tmux
   ./zellij
   neovim

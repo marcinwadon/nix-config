@@ -104,6 +104,21 @@ in {
     functions = {
       join = "ssh -o StrictHostKeyChecking=false admin@$argv";
 
+      # Route ssh through kitty's ssh kitten: it provisions terminfo and shell
+      # integration on the remote automatically, which is what makes a bare
+      # `ssh root@<box>` behave properly on the fleet. Deliberately NOT gated on
+      # Darwin — the `type -q kitten` guard makes it a no-op on the Linux
+      # containers (and before the first `./switch darwin`), which is more robust
+      # than a build-time platform branch. `command ssh` always bypasses it.
+      # Bash scripts (home/scripts, deploy-monitor) are unaffected by fish functions.
+      ssh = ''
+        if type -q kitten
+          kitten ssh $argv
+        else
+          command ssh $argv
+        end
+      '';
+
       # Aikido safe-chain command wrapper
       wrapSafeChainCommand = ''
         set -l original_cmd $argv[1]

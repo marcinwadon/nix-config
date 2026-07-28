@@ -9,6 +9,11 @@
     pkgs.vim
     pkgs.wget
     pkgs.fish
+    # kitty lives here, not in home.packages: nix-darwin aliases GUI bundles into
+    # /Applications/Nix Apps AND puts `kitty`/`kitten` on PATH from the same
+    # derivation, so the app and the kittens can't drift out of version sync.
+    # Its config is Home Manager's (home/programs/kitty).
+    pkgs.kitty
     pkgs.yubikey-manager
     pkgs.yubikey-personalization
     pkgs.gnupg
