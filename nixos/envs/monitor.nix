@@ -10,10 +10,14 @@
   sops.secrets.monitor_token = {};
   # Orchestrator secrets (added to secrets/monitor.yaml via sops; see RUNBOOK).
   # Kept in sops rather than plaintext .nix because this repo is public:
-  # the bot token + LLM key are true secrets, and the chat id + LiteLLM URL
-  # are personal/internal and should not be committed in the clear.
-  sops.secrets.telegram_bot_token = {};
-  sops.secrets.telegram_chat_id = {};
+  # the bot/app tokens + LLM key are true secrets, and the channel id + LiteLLM
+  # URL are personal/internal and should not be committed in the clear.
+  # Slack surface (SP1): the orchestrator moved from Telegram to a Slack Socket
+  # Mode app — bot token (xoxb), app-level token (xapp, connections:write), and
+  # the hub channel id.
+  sops.secrets.slack_bot_token = {};
+  sops.secrets.slack_app_token = {};
+  sops.secrets.slack_channel_id = {};
   sops.secrets.llm_api_key = {};
   sops.secrets.llm_base_url = {};
 
@@ -60,10 +64,11 @@
 
   # Orchestrator: a headless sidecar that watches the collector's /stream SSE,
   # triages blocked sessions through an LLM + policy (via the operator's LiteLLM
-  # gateway), and relays to Telegram with a live board. It is a plain dashboard
-  # client over localhost:8787 — no new collector endpoints, no token needed.
+  # gateway), and relays to Slack (Socket Mode) with a live board. It is a plain
+  # dashboard client over localhost:8787 — no new collector endpoints, no token
+  # needed. Slack Socket Mode is an outbound WebSocket, so no inbound port either.
   systemd.services.claude-monitor-orchestrator = {
-    description = "claude-monitor Telegram session orchestrator";
+    description = "claude-monitor Slack session orchestrator";
     wantedBy = ["multi-user.target"];
     # Start after the collector so /stream is up (best-effort; the watcher
     # reconnects with backoff regardless).
@@ -71,13 +76,20 @@
     wants = ["claude-monitor.service"];
     serviceConfig = {
       ExecStart = pkgs.writeShellScript "claude-monitor-orchestrator-start" ''
-        export TELEGRAM_BOT_TOKEN="$(cat "$CREDENTIALS_DIRECTORY/telegram_bot_token")"
-        export TELEGRAM_CHAT_ID="$(cat "$CREDENTIALS_DIRECTORY/telegram_chat_id")"
+        export SLACK_BOT_TOKEN="$(cat "$CREDENTIALS_DIRECTORY/slack_bot_token")"
+        export SLACK_APP_TOKEN="$(cat "$CREDENTIALS_DIRECTORY/slack_app_token")"
+        export SLACK_CHANNEL_ID="$(cat "$CREDENTIALS_DIRECTORY/slack_channel_id")"
         export LLM_API_KEY="$(cat "$CREDENTIALS_DIRECTORY/llm_api_key")"
         export LLM_BASE_URL="$(cat "$CREDENTIALS_DIRECTORY/llm_base_url")"
         # Non-secret config (safe in the public repo).
         export LLM_MODEL="claude-sonnet-4-6"
         export COLLECTOR_BASE_URL="http://localhost:8787"
+        # Personal task hub: dedicated Slack #tasks channel. Non-secret (a channel
+        # id). Unset → the task module is fully disabled and the orchestrator
+        # behaves as before. Optional overrides (DIGEST_TIMES, TASKS_TZ, AGING_DAYS,
+        # CAPTURE_CONFIDENCE, COMPLETE_CONFIDENCE, FUZZY_*, SNOOZE_LATER_HOURS) use
+        # built-in defaults (09:00,13:00,18:00 Europe/Warsaw).
+        export TASKS_CHANNEL_ID="C0BK28132A0"
         # Per-machine workspace roots for natural-language launch ("run a session
         # on mac in platform-fe …"). Absolute paths on the TARGET machine; the
         # resolver joins a bare repo name onto the first root, so parloa is primary
@@ -90,8 +102,9 @@
         exec ${pkgs.claude-monitor}/bin/claude-monitor-orchestrator
       '';
       LoadCredential = [
-        "telegram_bot_token:/run/secrets/telegram_bot_token"
-        "telegram_chat_id:/run/secrets/telegram_chat_id"
+        "slack_bot_token:/run/secrets/slack_bot_token"
+        "slack_app_token:/run/secrets/slack_app_token"
+        "slack_channel_id:/run/secrets/slack_channel_id"
         "llm_api_key:/run/secrets/llm_api_key"
         "llm_base_url:/run/secrets/llm_base_url"
       ];
