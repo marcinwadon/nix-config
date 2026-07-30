@@ -29,6 +29,7 @@
       pkgs.eza
       pkgs.fd
       pkgs.gh
+      pkgs.herdr
       pkgs.killall
       pkgs.lnav
       pkgs.mosh

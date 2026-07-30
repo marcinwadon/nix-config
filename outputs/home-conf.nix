@@ -28,6 +28,11 @@
         # The ACP adapter the per-machine host spawns (Zed's claude-agent-acp).
         claude-agent-acp = inputs.claude-monitor.packages.${system}.claude-agent-acp;
       })
+      # herdr (agent multiplexer). Package-ref only — do NOT use its
+      # overlays.default, which composes in the entire rust-overlay.
+      (_final: _prev: {
+        herdr = inputs.herdr.packages.${system}.herdr;
+      })
     ]
     ++ inputs.nixpkgs.lib.optionals (system == "aarch64-darwin") [
       inputs.neovim-flake.overlays.${system}.default

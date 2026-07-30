@@ -69,6 +69,16 @@
       url = "github:marcinwadon/claude-monitor";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    # Terminal multiplexer for coding agents (Rust). Pinned to a release tag
+    # per upstream's recommendation. Deliberately NOT `follows`-ing nixpkgs:
+    # herdr builds on its own locked nixpkgs + the rust-overlay toolchain pinned
+    # via its rust-toolchain.toml — following would risk a toolchain mismatch.
+    # Consumed as `pkgs.herdr` via a package-ref overlay (see outputs/home-conf.nix),
+    # NOT its `overlays.default` (which composes in the whole rust-overlay).
+    herdr = {
+      url = "github:ogulcancelik/herdr/v0.7.5";
+    };
   };
 
   outputs = {self, ...} @ inputs: let
