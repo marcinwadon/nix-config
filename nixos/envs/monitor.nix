@@ -46,6 +46,12 @@
         export LLM_API_KEY="$(cat "$CREDENTIALS_DIRECTORY/llm_api_key")"
         export LLM_BASE_URL="$(cat "$CREDENTIALS_DIRECTORY/llm_base_url")"
         export LLM_MODEL="claude-sonnet-4-6"
+        # Project picker: the directories each host offers when starting a
+        # session. Absolute paths on the TARGET machine (the host expands a
+        # leading ~ itself); a root that does not exist there is skipped, and
+        # browse is additionally fenced to the host's home directory. Unset →
+        # the picker falls back to paths derived from session history.
+        export WORKSPACE_ROOTS="mac=/Users/marcinwadon/Projects/parloa,/Users/marcinwadon/Projects/marcinwadon,/Users/marcinwadon/Projects/evojam;personal=/home/marcin/Projects;evojam=/home/marcin/Projects;parloa=/home/marcin/Projects"
         exec ${pkgs.claude-monitor}/bin/claude-monitor -addr :8787 -db /var/lib/claude-monitor/cm.db
       '';
       # systemd reads the sops secret as root and exposes it to the (dynamic)
@@ -94,6 +100,11 @@
         # on mac in platform-fe …"). Absolute paths on the TARGET machine; the
         # resolver joins a bare repo name onto the first root, so parloa is primary
         # (other dirs need a full path in the launch). These are mac's paths.
+        # Deliberately mac-only, and deliberately NOT the same value as the
+        # collector's WORKSPACE_ROOTS above: this one only backs natural-language
+        # launch (mac is the only machine launched that way), while the
+        # collector's drives the dashboard's project picker on all four hosts.
+        # Same variable name, two consumers — not a copy-paste slip.
         export WORKSPACE_ROOTS="mac=/Users/marcinwadon/Projects/parloa,/Users/marcinwadon/Projects/marcinwadon,/Users/marcinwadon/Projects/evojam"
         # Policy file is optional: a missing path falls back to the built-in
         # aggressive default. Drop a policy.md here to override.
