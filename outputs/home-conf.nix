@@ -49,14 +49,12 @@
   mkHome = {
     system,
     profile,
+    homeModules ? [inputs.neovim-flake.homeManagerModules.${system}.default],
   }:
     inputs.home-manager.lib.homeManagerConfiguration {
       pkgs = mkPkgs system;
       extraSpecialArgs = {inherit profile;};
-      modules = [
-        inputs.neovim-flake.homeManagerModules.${system}.default
-        ../home/home.nix
-      ];
+      modules = homeModules ++ [../home/home.nix];
     };
 in {
   # Exposed builders so the NixOS layer can reuse the same module set.
