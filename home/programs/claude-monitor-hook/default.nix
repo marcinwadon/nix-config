@@ -26,7 +26,9 @@
   enable = machine != null;
 
   tokenFile =
-    if pkgs.stdenv.isLinux
+    if p.monitorTokenFile != null
+    then p.monitorTokenFile
+    else if pkgs.stdenv.isLinux
     then "/run/secrets/monitor_token"
     else "${config.home.homeDirectory}/.config/claude-monitor/token";
 
