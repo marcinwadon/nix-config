@@ -77,37 +77,88 @@ Verify: `loginctl show-user marcin-parloa | grep Linger` prints `Linger=yes`,
 `ssh marcin-parloa@10.0.1.91 true` succeeds from the Mac, and
 `ssh marcin@10.0.1.91 'stat -c "%a %U" /srv/nix-config'` prints `755 marcin`.
 
-## Step 2 — operator, from your Mac: ship the flake checkout
+## Step 2 — operator, from your Mac: ship the checkout and the secrets
 
-Run this from a terminal on your Mac (not an ssh session on the box) — it
-reads the local working tree and streams it over:
+Everything here runs on your Mac, not in an ssh session on the box, and it has
+to: the Mac is the only machine holding both the git-crypt keys and ssh
+credentials for the containers. **The three new users have no outbound ssh
+identity at all** — their identity *is* the signing key being installed here,
+so they cannot fetch it themselves. That circularity is why the secrets are
+pushed from here instead of pulled by the per-user block.
+
+### 2a — the flake checkout
 
 ```bash
 cd /Users/marcinwadon/Projects/marcinwadon/nix-config
-COPYFILE_DISABLE=1 tar czf - --exclude .git --exclude result . \
-  | ssh marcin@10.0.1.91 'tar xzf - -C /srv/nix-config'
+git archive --format=tar HEAD \
+  | ssh marcin@10.0.1.91 "tar xf - -C /srv/nix-config \
+      --exclude='home/secrets/*' --exclude='home/secrets' --exclude='home/scripts/h_*'"
 ssh marcin@10.0.1.91 'ls /srv/nix-config/home/profiles/m1-common.nix && echo staged-ok'
 ```
 
-The tar carries the working tree, so the `git add -N` visibility problem does
-not apply — but `path:` must be used as the flake ref below, since there is
-no `.git` on the box.
+Two details are load-bearing, both learned by failing:
+
+**`git archive`, not `tar` of the working tree.** `tar` preserves the Mac's file
+modes, and ~32 files under `home/programs/claude-code/files/` are mode `700`
+there — the new users cannot read them, and the build fails with
+`Permission denied` on `CLAUDE.md` while merely *fetching* the flake input.
+`git archive` emits only git's exec bit, so everything lands readable. It also
+ships committed content only, which excludes in-flight work in the tree.
+
+**The excludes are a secret guard, not tidiness.** git-crypt protects
+`home/secrets/**` and `home/scripts/h_*`, but those are *decrypted* in the
+working tree, and `git archive` does **not** re-encrypt them — verified;
+assuming it would is a mistake. Without the excludes the box receives your
+GitHub tokens and OpenAI key in plaintext and world-readable. Nothing here
+needs them: every consumer of those paths is Darwin-only.
+
+Verify — expect *no such directory* and `0`:
+
+```bash
+ssh marcin@10.0.1.91 'ls /srv/nix-config/home/secrets 2>&1 | head -1; find /srv/nix-config \! -perm -o+r | wc -l'
+```
+
+### 2b — the secrets, pushed to each user
+
+**Run this in `bash`** — your Mac's login shell is fish, where `$(...)`, `<<<`
+and `$1` do not mean what this block needs. Type `bash` first.
+
+```bash
+TOKEN=$(ssh -n marcin@10.0.1.121 'cat /run/secrets/monitor_token')
+[ -n "$TOKEN" ] || echo "ERROR: monitor token empty — stop here, do not continue"
+GHTOK=$(gh auth token)
+
+for pair in "personal 10.0.1.120" "evojam 10.0.1.121" "parloa 10.0.1.122"; do
+  c=$(echo $pair | cut -d' ' -f1); ip=$(echo $pair | cut -d' ' -f2)
+  KEY=$(ssh -n marcin@$ip 'cat /run/secrets/ssh_signing_key')
+  [ -n "$KEY" ] || { echo "ERROR: $c key empty from $ip — skipping"; continue; }
+  printf 'marcin-%-9s from %s -> ' "$c" "$ip"
+  ssh "marcin-$c@10.0.1.91" 'umask 077; mkdir -p ~/.config/claude-monitor ~/.config/nix ~/.ssh; cat > ~/.config/claude-monitor/token' <<< "$TOKEN"
+  ssh "marcin-$c@10.0.1.91" 'umask 077; cat > ~/.ssh/id_ed25519_signing' <<< "$KEY"
+  ssh "marcin-$c@10.0.1.91" 'umask 077; cat > ~/.nixtok' <<< "access-tokens = github.com=$GHTOK"
+  ssh "marcin-$c@10.0.1.91" 'printf "experimental-features = nix-command flakes\n" > ~/.config/nix/nix.conf; ssh-keygen -y -f ~/.ssh/id_ed25519_signing >/dev/null && echo "installed, key valid"'
+done
+```
+
+Each identity gets **its own** key, from its own container — that mapping is the
+whole point of reusing them, so a wrong pairing would silently sign as the wrong
+person. Verify: three `installed, key valid` lines.
+
+`~/.nixtok` exists because `claude-monitor` is a **private** flake input and
+nix's `github:` fetcher needs an *https token* for it; an ssh key does not help,
+and without it the build fails with a bare `HTTP error 404`. It is written
+`0600`, Step 3 shreds it after use, and it is deliberately not passed on a
+command line where `ps` would expose it.
 
 ## Step 3 — automatable, per user
 
 SSH in as `marcin-personal@10.0.1.91` and run this block, then repeat unchanged
 logged in as `marcin-evojam`, then `marcin-parloa`. The client identity is
 derived from the account you run it as, so there is nothing to edit between
-runs. The inner `ssh` calls below use `-n` deliberately — without it, a
-piped/non-interactive invocation of this block can have the inner `ssh` steal
-unread bytes from the outer script's own input stream, silently truncating
-everything after it while still exiting 0.
+runs. This block fetches nothing — Step 2b already placed everything it needs,
+because this account has no way to reach the containers.
 
 ```bash
-# Flakes.
-mkdir -p ~/.config/nix
-printf "experimental-features = nix-command flakes\n" > ~/.config/nix/nix.conf
-
 # Derive the client identity from the account this runs as. Usernames are marcin-<client>
 # by construction. Nothing to edit — run this block unchanged as each user.
 c="${USER#marcin-}"
@@ -116,31 +167,32 @@ case "$c" in
   *) echo "ERROR: run this as marcin-personal, marcin-evojam or marcin-parloa (got user '$USER')" >&2; exit 1 ;;
 esac
 
-# Monitor token (shared fleet-wide), 0600. Fetched from evojam's CT
-# (10.0.1.121) regardless of which client `$c` is — the monitor token is one
-# value shared across the whole fleet, not a per-client secret, so any CT
-# would do here.
-mkdir -p ~/.config/claude-monitor
-TOKEN=$(ssh -n marcin@10.0.1.121 'cat /run/secrets/monitor_token') || { echo "ERROR: failed to fetch monitor token" >&2; exit 1; }
-[ -n "$TOKEN" ] || { echo "ERROR: monitor token is empty" >&2; exit 1; }
-install -m 600 /dev/stdin ~/.config/claude-monitor/token <<< "$TOKEN"
+# Step 2b must have run for this user. Refuse to continue on a missing or empty
+# file rather than activating a host that can never register: an unreadable
+# token leaves MONITOR_TOKEN silently unset and the host simply never appears.
+for f in ~/.config/claude-monitor/token ~/.ssh/id_ed25519_signing ~/.nixtok; do
+  [ -s "$f" ] || { echo "ERROR: $f is missing or empty — run Step 2b from the Mac first" >&2; exit 1; }
+done
+chmod 700 ~/.ssh
 
-# Signing key, reused from the matching CT (personal .120, evojam .121, parloa .122).
-case "$c" in
-  personal) CONTAINER_IP=10.0.1.120 ;;
-  evojam) CONTAINER_IP=10.0.1.121 ;;
-  parloa) CONTAINER_IP=10.0.1.122 ;;
-esac
-KEY=$(ssh -n marcin@$CONTAINER_IP 'cat /run/secrets/ssh_signing_key') || { echo "ERROR: failed to fetch signing key from $CONTAINER_IP for client $c" >&2; exit 1; }
-[ -n "$KEY" ] || { echo "ERROR: signing key is empty" >&2; exit 1; }
-mkdir -p ~/.ssh && chmod 700 ~/.ssh
-install -m 600 /dev/stdin ~/.ssh/id_ed25519_signing <<< "$KEY"
+# Activate with the pinned home-manager revision from flake.lock, not the
+# registry's unpinned home-manager/master, so the CLI matches the configuration.
+# NIX_CONFIG carries the https token the PRIVATE claude-monitor input needs.
+export NIX_CONFIG="$(cat ~/.nixtok)"
+nix build "path:/srv/nix-config#homeConfigurations.m1-$c.activationPackage" && ./result/activate
+rc=$?
+shred -u ~/.nixtok 2>/dev/null || rm -f ~/.nixtok
+[ $rc -eq 0 ] || { echo "ERROR: build or activation failed for m1-$c — see output above" >&2; exit 1; }
 
-# Activate. Use the pinned home-manager revision from flake.lock, not the registry's
-# unpinned home-manager/master, so the CLI version matches the configuration.
-nix build "path:/srv/nix-config#homeConfigurations.m1-$c.activationPackage" && \
-./result/activate
+# The project picker lists git repos under this root; it stays empty until you
+# clone something, which is expected and not a WORKSPACE_ROOTS problem.
+mkdir -p ~/Projects
+echo "m1-$c activated"
 ```
+
+Expect `Starting units: claude-monitor-host.service, claude-monitor-tail.service`
+near the end of the activation output, then `m1-$c activated`. The token file is
+shredded whether the build succeeded or not.
 
 ## Step 4 — operator, as root, once, after Step 3 has run for all three users
 
