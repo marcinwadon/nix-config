@@ -62,15 +62,20 @@ and `ssh marcin-parloa@10.0.1.91 true` succeeds from the Mac.
 
 ## Step 2 — automatable, per user
 
-Run for each `c` in `personal evojam parloa`, as `marcin-$c`:
+Run this block unchanged once as each of the three users: `ssh marcin-personal@10.0.1.91 'bash -s' < script.sh`, then `marcin-evojam`, then `marcin-parloa`. The client identity is derived from the account you run it as, so there is nothing to edit.
 
 ```bash
 # Flakes.
 mkdir -p ~/.config/nix
 printf "experimental-features = nix-command flakes\n" > ~/.config/nix/nix.conf
 
-# EDIT THIS: Set the client identity you are activating (personal, evojam, or parloa)
-c=personal
+# Derive the client identity from the account this runs as. Usernames are marcin-<client>
+# by construction. Nothing to edit — run this block unchanged as each user.
+c="${USER#marcin-}"
+case "$c" in
+  personal|evojam|parloa) ;;
+  *) echo "ERROR: run this as marcin-personal, marcin-evojam or marcin-parloa (got user '$USER')" >&2; exit 1 ;;
+esac
 
 # Monitor token (shared fleet-wide), 0600.
 mkdir -p ~/.config/claude-monitor
@@ -83,7 +88,6 @@ case "$c" in
   personal) CONTAINER_IP=10.0.1.120 ;;
   evojam) CONTAINER_IP=10.0.1.121 ;;
   parloa) CONTAINER_IP=10.0.1.122 ;;
-  *) echo "ERROR: unknown client '$c' (expected personal, evojam, or parloa)" >&2; exit 1 ;;
 esac
 KEY=$(ssh marcin@$CONTAINER_IP 'cat /run/secrets/ssh_signing_key') || { echo "ERROR: failed to fetch signing key from $CONTAINER_IP for client $c" >&2; exit 1; }
 [ -n "$KEY" ] || { echo "ERROR: signing key is empty" >&2; exit 1; }
@@ -96,7 +100,7 @@ install -m 600 /dev/stdin ~/.ssh/id_ed25519_signing <<< "$KEY"
 
 # Activate. Use the pinned home-manager revision from flake.lock, not the registry's
 # unpinned home-manager/master, so the CLI version matches the configuration.
-nix build "path:/home/marcin/nix-config#homeConfigurations.m1-$c.activationPackage"
+nix build "path:/home/marcin/nix-config#homeConfigurations.m1-$c.activationPackage" && \
 ./result/activate
 ```
 
