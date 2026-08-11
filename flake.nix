@@ -142,28 +142,46 @@
       # exists solely to repoint every such path at a real file under the
       # user's home. Renders (not option paths) because a rendered artifact
       # is what actually reaches disk — see home/profiles/m1-common.nix for
-      # the two override styles this regression-guards. minRenderLen is the
-      # same vacuous-pass tripwire as above (real per-client render is
-      # ~1.7-1.8k chars; checked per-client so one client silently going
-      # empty can't hide behind the other two).
+      # the two override styles this regression-guards.
+      #
+      # ssh and git are checked INDEPENDENTLY, per client — four sub-checks,
+      # not two. Concatenating them into one string before checking (the
+      # first version of this guard) moves the vacuous-pass risk rather than
+      # removing it: `cfg.home.file.".ssh/config".text or ""` silently
+      # degrades to "" if that home.file key is ever renamed or the ssh
+      # module changes what it emits, and a still-substantial git JSON
+      # (~1.4-1.5k chars) would mask that emptiness — both the length check
+      # and any /run/secrets search on the now ssh-blind concatenation would
+      # stay clean while the ssh side is actually unobserved.
+      #
+      # Thresholds are calibrated per field, not shared, because the two
+      # fields have different natural sizes: real ssh renders measured
+      # ~348-350 chars/client, real git JSON ~1419-1456 chars/client. Each
+      # threshold sits comfortably below its field's measured real value and
+      # comfortably above a degenerate one (an emptied string, or a
+      # near-empty `{}`).
       no-m1-secret-leak = let
         lib = inputs.nixpkgs.lib;
         clients = ["m1-personal" "m1-evojam" "m1-parloa"];
-        minRenderLen = 200;
-        renderClient = c: let
-          cfg = self.homeConfigurations.${c}.config;
-          sshText = cfg.home.file.".ssh/config".text or "";
-          gitJson = builtins.toJSON cfg.programs.git.settings;
-        in
-          sshText + "\n" + gitJson;
-        rendered = lib.genAttrs clients renderClient;
-        tooShort = lib.filterAttrs (_c: t: builtins.stringLength t < minRenderLen) rendered;
-        leaking = lib.filterAttrs (_c: t: lib.hasInfix "/run/secrets" t) rendered;
+        minSshLen = 100;
+        minGitLen = 500;
+        sshTextOf = c: self.homeConfigurations.${c}.config.home.file.".ssh/config".text or "";
+        gitJsonOf = c: builtins.toJSON self.homeConfigurations.${c}.config.programs.git.settings;
+        renderedSsh = lib.genAttrs clients sshTextOf;
+        renderedGit = lib.genAttrs clients gitJsonOf;
+        sshTooShort = lib.filterAttrs (_c: t: builtins.stringLength t < minSshLen) renderedSsh;
+        gitTooShort = lib.filterAttrs (_c: t: builtins.stringLength t < minGitLen) renderedGit;
+        sshLeaking = lib.filterAttrs (_c: t: lib.hasInfix "/run/secrets" t) renderedSsh;
+        gitLeaking = lib.filterAttrs (_c: t: lib.hasInfix "/run/secrets" t) renderedGit;
       in
-        if tooShort != {}
-        then throw "no-m1-secret-leak: rendered ssh+git config suspiciously short for: ${toString (builtins.attrNames tooShort)} — this check would otherwise pass VACUOUSLY; investigate before trusting a clean result"
-        else if leaking != {}
-        then throw "SECRET LEAK: /run/secrets found in the rendered ssh/git config for: ${toString (builtins.attrNames leaking)} — this box has no sops-nix, so an inherited default is a silent regression, not a benign one"
+        if sshTooShort != {}
+        then throw "no-m1-secret-leak: rendered SSH config suspiciously short for: ${toString (builtins.attrNames sshTooShort)} — this check would otherwise pass VACUOUSLY on the ssh side; investigate before trusting a clean result"
+        else if gitTooShort != {}
+        then throw "no-m1-secret-leak: rendered GIT settings suspiciously short for: ${toString (builtins.attrNames gitTooShort)} — this check would otherwise pass VACUOUSLY on the git side; investigate before trusting a clean result"
+        else if sshLeaking != {}
+        then throw "SECRET LEAK: /run/secrets found in the rendered SSH config for: ${toString (builtins.attrNames sshLeaking)} — this box has no sops-nix, so an inherited default is a silent regression, not a benign one"
+        else if gitLeaking != {}
+        then throw "SECRET LEAK: /run/secrets found in the rendered GIT settings for: ${toString (builtins.attrNames gitLeaking)} — this box has no sops-nix, so an inherited default is a silent regression, not a benign one"
         else pkgs.runCommand "no-m1-secret-leak" {} "echo ok > $out";
     };
 
