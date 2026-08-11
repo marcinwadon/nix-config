@@ -65,4 +65,22 @@ in {
     system = "aarch64-darwin";
     profile = import ../home/profiles/darwin.nix;
   };
+
+  # Mac mini M1 (Fedora Asahi Remix) — three standalone users, one per client
+  # identity. homeModules = [] because neovim-flake is Darwin-only.
+  homeConfigurations.m1-personal = mkHome {
+    system = "aarch64-linux";
+    profile = import ../home/profiles/m1-personal.nix;
+    homeModules = [];
+  };
+  homeConfigurations.m1-evojam = mkHome {
+    system = "aarch64-linux";
+    profile = import ../home/profiles/m1-evojam.nix;
+    homeModules = [];
+  };
+  homeConfigurations.m1-parloa = mkHome {
+    system = "aarch64-linux";
+    profile = import ../home/profiles/m1-parloa.nix;
+    homeModules = [];
+  };
 }

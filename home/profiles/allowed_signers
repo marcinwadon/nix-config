@@ -1,0 +1,7 @@
+# Public ssh signing keys, per identity. Public key material by
+# definition, so this is deliberately NOT a sops secret. Consumed by the
+# m1-* profiles via git.extraGitconfigFiles; the CTs still read their own
+# copies from sops.
+244477798+marcin-wadon-parloa@users.noreply.github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKeNTLv5fm7lU+oCtGGnsrdZjgFGqKd6PdWvnjqRMN0P marcin-parloa-claude-env
+marcin.wadon@gmail.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPH/DrDAkcSTym62cDWoLEGHl+aPLlWIhP8bHKSUUm0t marcin-personal-claude-env
+mwadon@evojam.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGtN38yxksGiVU23yRgfUADqv5GAVdG+P5ENvoucO0Vy marcin-evojam-claude-env

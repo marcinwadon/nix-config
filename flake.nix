@@ -98,11 +98,15 @@
     checks.${system}.no-linux-secret-leak = let
       lib = inputs.nixpkgs.lib;
       forbidden = ["ghp_" "ghs_" "github_pat_" "gpgconf"];
-      rendered = lib.concatMapStringsSep "\n" (e: let
-        f = self.nixosConfigurations.${e}.config.home-manager.users.marcin.programs.fish;
-      in
-        (f.shellInit or "") + "\n" + (f.interactiveShellInit or ""))
-      ["personal" "evojam" "parloa" "monitor"];
+      renderFish = f: (f.shellInit or "") + "\n" + (f.interactiveShellInit or "");
+      rendered =
+        lib.concatMapStringsSep "\n" (e:
+          renderFish self.nixosConfigurations.${e}.config.home-manager.users.marcin.programs.fish)
+        ["personal" "evojam" "parloa" "monitor"]
+        + "\n"
+        + lib.concatMapStringsSep "\n" (c:
+          renderFish self.homeConfigurations.${c}.config.programs.fish)
+        ["m1-personal" "m1-evojam" "m1-parloa"];
       hits = lib.filter (p: lib.hasInfix p rendered) forbidden;
     in
       if hits == []
