@@ -51,7 +51,7 @@
         # leading ~ itself); a root that does not exist there is skipped, and
         # browse is additionally fenced to the host's home directory. Unset →
         # the picker falls back to paths derived from session history.
-        export WORKSPACE_ROOTS="mac=/Users/marcinwadon/Projects/parloa,/Users/marcinwadon/Projects/marcinwadon,/Users/marcinwadon/Projects/evojam;personal=/home/marcin/Projects;evojam=/home/marcin/Projects;parloa=/home/marcin/Projects"
+        export WORKSPACE_ROOTS="mac=/Users/marcinwadon/Projects/parloa,/Users/marcinwadon/Projects/marcinwadon,/Users/marcinwadon/Projects/evojam;personal=/home/marcin/Projects;evojam=/home/marcin/Projects;parloa=/home/marcin/Projects;m1-personal=/home/marcin-personal/Projects;m1-evojam=/home/marcin-evojam/Projects;m1-parloa=/home/marcin-parloa/Projects"
         exec ${pkgs.claude-monitor}/bin/claude-monitor -addr :8787 -db /var/lib/claude-monitor/cm.db
       '';
       # systemd reads the sops secret as root and exposes it to the (dynamic)
