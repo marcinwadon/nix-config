@@ -10,9 +10,14 @@
 # turn ends, and the final assistant message can't be streamed early.
 #
 # The wrapper carries the non-secret MONITOR_URL/MONITOR_MACHINE as literals and
-# reads MONITOR_TOKEN from a file at RUNTIME — sops (/run/secrets/monitor_token)
-# on Linux containers, ~/.config/claude-monitor/token on darwin (no sops there).
-# Nothing secret is baked into the Nix store.
+# reads MONITOR_TOKEN from a file at RUNTIME. The default token path is sops
+# (/run/secrets/monitor_token) on Linux, ~/.config/claude-monitor/token on
+# darwin (no sops there) — but a profile can override this via
+# `monitorTokenFile` (home/lib/profile-defaults.nix), which this module reads
+# below and prefers over both platform defaults. That override exists for
+# Linux boxes with no sops-nix at all (the M1 Asahi host): without it the
+# token file is unreadable, MONITOR_TOKEN stays unset, and the host silently
+# never registers. Nothing secret is baked into the Nix store.
 {
   pkgs,
   lib,

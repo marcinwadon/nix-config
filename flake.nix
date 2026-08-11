@@ -98,11 +98,15 @@
     # defined") — both checks below must live under one `checks.${system} =
     # { ... };` assignment.
     checks.${system} = {
-      # Guard: fail `nix flake check` if any Linux container's fish config
-      # leaks a GitHub token literal or runs the gpg-agent (gpgconf) — the
-      # class of bug a code review caught earlier. Eval-only over the
-      # x86_64-linux configs, so it runs on the darwin build host without a
-      # Linux builder.
+      # Guard: fail `nix flake check` if any Linux fish config — a NixOS
+      # container's or one of the three M1 standalone home configurations'
+      # (which are NOT containers) — leaks a GitHub token literal or runs the
+      # gpg-agent (gpgconf), the class of bug a code review caught earlier.
+      # Eval-only, so it runs on the darwin build host without a Linux
+      # builder — which matters more now than when this comment was first
+      # written: there is no aarch64-linux builder anywhere in this setup, so
+      # eval-only is the ONLY way this guard can run against the M1 configs
+      # at all.
       #
       # minRenderLen is a tripwire against a VACUOUS pass: `hits == []` is
       # also true if `rendered` is empty (an option rename, a Linux/Darwin

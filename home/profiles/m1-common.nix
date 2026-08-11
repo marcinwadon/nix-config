@@ -16,8 +16,15 @@
 #   4. common.nix:29  git.signing.allowedSignersFile
 # Numbered to match the "Override N of 4" tripwire comments below, in the
 # order they appear in the code.
-# checks.${system}.no-m1-secret-leak (flake.nix) is the permanent regression
-# guard for all four, scoped to what actually reaches disk.
+# checks.${system}.no-m1-secret-leak (flake.nix) reads exactly TWO rendered
+# fields: home.file.".ssh/config".text and programs.git.settings — so it is
+# the permanent regression guard for overrides 2-4 only (sshMatchBlocks and
+# git.signing land in those two fields). Override 1 (monitorTokenFile) renders
+# only into the hook/tailer/host wrapper's SCRIPT TEXT, which reaches the
+# module system solely as a store path — neither field the check scans can
+# see it. That override is guarded only by the runbook's live-service
+# verification (the host/tailer must come up `active`, not by a silent
+# never-registers failure), not by this check.
 {
   client,
   email,

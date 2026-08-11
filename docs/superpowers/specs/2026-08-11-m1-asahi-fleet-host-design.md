@@ -113,14 +113,17 @@ machine-name segment match (split on `-`) alongside the existing cwd-segment
 match, so hat membership is **guaranteed by the label** rather than by where a
 repo happens to be cloned. One file, plus a test. Generalises to any future box.
 
-This adds a *third* signal, so precedence must be stated rather than left to the
-reader: **machine-exact → machine-segment → cwd-segment**, with the client checks
-still ordered parloa before evojam as today. The consequence to be explicit about:
-a session on `m1-personal` with a cwd under `~/Projects/parloa` buckets as
-**parloa**, because the parloa clauses are evaluated first — consistent with the
-existing comment that the repo is the stronger signal. The buckets stay a total
-partition (`personal` remains the complement), so no session can vanish from every
-hat.
+The machine-segment match **subsumes** the old exact match (a bare machine name
+like `parloa` splits on `-` to `['parloa']`, which still contains `parloa`), so
+this is one clause replacing one, not a third tier layered on top of two. The
+two axes (machine label, cwd) are simply OR'd within each client's predicate —
+there is no axis-vs-axis precedence to state. What decides a conflict is
+**client priority**: the client checks are ordered parloa before evojam, as
+today, and whichever axis matches wins for that client. The consequence to be
+explicit about: a session on `m1-personal` with a cwd under `~/Projects/parloa`
+still buckets as **parloa**, because the parloa clause is evaluated first and
+its cwd axis matches. The buckets stay a total partition (`personal` remains
+the complement), so no session can vanish from every hat.
 
 ### nix-config changes (second PR)
 

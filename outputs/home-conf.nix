@@ -49,6 +49,12 @@
   mkHome = {
     system,
     profile,
+    # Load-bearing default: it exists ONLY so the Darwin call site below (the
+    # sole caller that omits homeModules) keeps importing neovim-flake
+    # unchanged. Every Linux caller MUST pass `homeModules = []` explicitly —
+    # neovim-flake can't build there (see mkOverlays' comment) — so dropping
+    # this default "for simplicity" would silently restore an
+    # unconditional Darwin-only import for any Linux caller that forgets to.
     homeModules ? [inputs.neovim-flake.homeManagerModules.${system}.default],
   }:
     inputs.home-manager.lib.homeManagerConfiguration {

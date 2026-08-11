@@ -954,13 +954,13 @@ Expected, per user: `ssh-ok` and `Linger=yes`. Do not proceed on a `Linger=no` �
 
 ```bash
 cd /Users/marcinwadon/Projects/marcinwadon/nix-config
-ssh marcin@10.0.1.91 'rm -rf ~/nix-config && mkdir -p ~/nix-config && chmod 755 ~ ~/nix-config'
+ssh marcin@10.0.1.91 'sudo mkdir -p /srv/nix-config && sudo chown marcin:marcin /srv/nix-config && sudo chmod 755 /srv/nix-config'
 COPYFILE_DISABLE=1 tar czf - --exclude .git --exclude result . \
-  | ssh marcin@10.0.1.91 'tar xzf - -C ~/nix-config'
-ssh marcin@10.0.1.91 'ls ~/nix-config/home/profiles/m1-common.nix && echo staged-ok'
+  | ssh marcin@10.0.1.91 'tar xzf - -C /srv/nix-config'
+ssh marcin@10.0.1.91 'ls /srv/nix-config/home/profiles/m1-common.nix && echo staged-ok'
 ```
 
-Note: the tar carries the working tree, so the `git add -N` visibility problem does not apply — but `path:` must be used as the flake ref, since there is no `.git` on the box.
+Note: the tar carries the working tree, so the `git add -N` visibility problem does not apply — but `path:` must be used as the flake ref, since there is no `.git` on the box. The checkout lives at `/srv/nix-config`, NOT inside `/home/marcin` — that directory is mode `700`, so a checkout there would be unreadable by the other two users (`EACCES` on their `path:` flake ref, which reads like a nix problem and is not one). See the runbook's "Facts that decide the procedure" for the full reasoning.
 
 - [ ] **Step 4: Place the token and signing key for each user**
 
@@ -991,13 +991,33 @@ done
 ```bash
 for c in personal evojam parloa; do
   echo "=== m1-$c ==="
-  ssh "marcin-$c@10.0.1.91" "nix run home-manager/master -- switch --flake 'path:/home/marcin/nix-config#m1-$c' 2>&1 | tail -5"
+  ssh "marcin-$c@10.0.1.91" "nix build 'path:/srv/nix-config#homeConfigurations.m1-$c.activationPackage' && ./result/activate 2>&1 | tail -5"
 done
 ```
 
+Uses the pinned home-manager revision from `flake.lock` via
+`homeConfigurations.m1-$c.activationPackage`, not the registry's unpinned
+`home-manager/master` — the runbook's Step 3 settled on this form so the
+activating CLI version can never drift from the configuration it activates;
+this step must match it.
+
 Expected: `Activating …` lines ending without error for each. This is the first real aarch64-linux *build*, so expect it to take a while on the first user and be largely cached for the next two.
 
-- [ ] **Step 6: Confirm the services are up and the shells are configured**
+- [ ] **Step 6: Configure the fish shell for each user**
+
+Fish is installed by home-manager, so it does not exist until Step 5's activation has run — this step must come after Step 5, not before, matching the runbook's Step 4:
+
+```bash
+for c in personal evojam parloa; do
+  FISH=$(ssh marcin@10.0.1.91 "sudo -i -u marcin-$c command -v fish") || { echo "ERROR: fish not found for marcin-$c" >&2; continue; }
+  ssh marcin@10.0.1.91 "grep -qxF '$FISH' /etc/shells || echo '$FISH' | sudo tee -a /etc/shells >/dev/null; sudo chsh -s '$FISH' marcin-$c"
+  echo "marcin-$c -> $FISH"
+done
+```
+
+Expected: a real fish path (e.g. ending in `.nix-profile/bin/fish`) for each user, no `ERROR` lines.
+
+- [ ] **Step 7: Confirm the services are up and the shells are configured**
 
 ```bash
 for c in personal evojam parloa; do
@@ -1005,12 +1025,13 @@ for c in personal evojam parloa; do
   ssh "marcin-$c@10.0.1.91" 'systemctl --user is-active claude-monitor-host claude-monitor-tail; \
     git config --get user.email; git config --get user.signingkey; \
     git config --get gpg.ssh.allowedSignersFile; test -r "$(git config --get gpg.ssh.allowedSignersFile)" && echo signers-readable'
+  ssh marcin@10.0.1.91 "getent passwd marcin-$c | cut -d: -f7"
 done
 ```
 
-Expected per user: both services `active`; the identity's email; a signing key under `~/.ssh`; an allowed-signers path under `~/.config/git` that is readable. A `/run/secrets/...` value here means Task 5's overrides regressed.
+Expected per user: both services `active`; the identity's email; a signing key under `~/.ssh`; an allowed-signers path under `~/.config/git` that is readable; the passwd shell field ending in `/fish`. A `/run/secrets/...` value here means Task 5's overrides regressed; a non-fish shell means Step 6 did not take.
 
-- [ ] **Step 7: Deploy the collector change**
+- [ ] **Step 8: Deploy the collector change**
 
 Ship `nixos/envs/monitor.nix` to the monitor box and rebuild. Check for live ACP sessions first — the collector restart severs them.
 
@@ -1023,7 +1044,7 @@ ssh root@10.0.1.123 'cd /root/nix-config && nixos-rebuild switch --flake .#monit
 
 Expected: `exit=0`. Do not pipe the rebuild through `tail` directly — the pipeline's exit status would be `tail`'s, masking a failure.
 
-- [ ] **Step 8: Verify the whole system from the collector's API**
+- [ ] **Step 9: Verify the whole system from the collector's API**
 
 ```bash
 echo "--- machines ---"
@@ -1034,9 +1055,9 @@ for c in personal evojam parloa; do
 done
 ```
 
-Expected: all three `m1-*` machines listed as connected, and each `projects` call returning a non-empty list. An empty list with HTTP 200 means `WORKSPACE_ROOTS` did not take effect — restart the collector rather than assuming the endpoint is broken.
+Expected: all three `m1-*` machines listed as connected, and each `projects` call returns HTTP 200. This is deliberately NOT "returns a non-empty list": `~/Projects` does not exist yet on a fresh user, and the enumerator skips a missing root rather than erroring, so `[]` here is normal until a repo is cloned into `~/Projects` on that user — it does not mean `WORKSPACE_ROOTS` is wrong. A machine missing from the first `curl` (not the emptiness of its `projects` list) is the actual signal that `WORKSPACE_ROOTS` or the collector restart did not take effect.
 
-- [ ] **Step 9: Prove a real session works and lands in the right hat**
+- [ ] **Step 10: Prove a real session works and lands in the right hat**
 
 Start a session on `m1-parloa` from the dashboard, send a prompt, and confirm a reply. Then:
 
@@ -1046,9 +1067,9 @@ curl -s http://10.0.1.123:8787/api/sessions | grep -o '"machine":"m1-parloa"[^}]
 
 Confirm in the browser that the session appears under the **Parloa** hat and not Personal. This is the only check that exercises `hatOf`'s new machine axis against real data; the unit tests cover the logic but not the wiring.
 
-- [ ] **Step 10: Report what remains for the operator**
+- [ ] **Step 11: Report what remains for the operator**
 
-Report explicitly: the nix-config commits are **local and unpushed** (that repo is the operator's to push); the claude-monitor commits need pushing and a collector rebuild if the `hatOf` change is to reach the browser; the operator's Ghosthub work and `flake.lock` are untouched in the nix-config tree; and `claude /login` (runbook Step 3) is still theirs to run for any user where a prompt returns `-32000 "Authentication required"`.
+Report explicitly: the nix-config commits are **local and unpushed** (that repo is the operator's to push); the claude-monitor commits need pushing and a collector rebuild if the `hatOf` change is to reach the browser; the operator's Ghosthub work and `flake.lock` are untouched in the nix-config tree; `claude /login` (runbook Step 5) is still theirs to run for any user where a prompt returns `-32000 "Authentication required"`; and `gh auth login` (also runbook Step 5) is still theirs to run per user.
 
 ---
 
@@ -1068,7 +1089,9 @@ Report explicitly: the nix-config commits are **local and unpushed** (that repo 
 | `allowed_signers` as plaintext repo file | 5, Step 1 |
 | `WORKSPACE_ROOTS` | 6 |
 | Runbook with root/automatable split | 7 |
-| Users, lingering, fish shell, `claude /login` | 7 Step 1/Step 3, executed in 8 |
+| Users, lingering | 7 Step 1, executed in 8 |
+| fish shell (`/etc/shells` + `chsh`, sequenced after activation) | 7 Step 4, executed in 8 |
+| `claude /login` | 7 Step 5, executed in 8 |
 | `nix-ld` not needed | 7 (recorded as a fact) |
 | Reused signing keys per identity | 8 Step 4 |
 | Three users ⇒ three `~/.claude` configs | 5 Step 7 proves per-user `MONITOR_MACHINE` |
@@ -1079,4 +1102,4 @@ No spec requirement is unclaimed. The seven-`claude`-logins risk is deliberately
 
 **Type consistency:** `hasSegment(value, seg, sep = '/')` is used with three arguments in `hatOf`'s machine axis and two in its cwd axis, matching the signature in Task 1's Interfaces. `mkHome`'s `homeModules` parameter (Task 3) is passed by all three Task 5 call sites. `monitorTokenFile` (Task 4) is set in Task 5's `m1-common.nix`. `m1-common.nix` takes `{client, email}` and all three profiles call it with exactly those. Machine labels `m1-<client>` and usernames `marcin-<client>` are derived from the same `client` string, so Tasks 5, 6, 7 and 8 cannot drift apart.
 
-**One mechanism worth naming, since it is used in a new way:** Task 5 delivers `allowed_signers` through `git.extraGitconfigFiles`, which until now has only carried gitconfig fragments (the Mac's `parloa.gitconfig`). That is safe rather than lucky: `home/programs/git/default.nix` implements it as a plain `home.file.".config/git/${name}".text` write with nothing gitconfig-specific about it, so arbitrary text is fine. Task 8 Step 6 additionally proves the written file is readable at the path git was told to use, which is the property that actually matters.
+**One mechanism worth naming, since it is used in a new way:** Task 5 delivers `allowed_signers` through `git.extraGitconfigFiles`, which until now has only carried gitconfig fragments (the Mac's `parloa.gitconfig`). That is safe rather than lucky: `home/programs/git/default.nix` implements it as a plain `home.file.".config/git/${name}".text` write with nothing gitconfig-specific about it, so arbitrary text is fine. Task 8 Step 7 additionally proves the written file is readable at the path git was told to use, which is the property that actually matters.
