@@ -69,9 +69,13 @@ Run for each `c` in `personal evojam parloa`, as `marcin-$c`:
 mkdir -p ~/.config/nix
 printf "experimental-features = nix-command flakes\n" > ~/.config/nix/nix.conf
 
+# EDIT THIS: Set the client identity you are activating (personal, evojam, or parloa)
+c=personal
+
 # Monitor token (shared fleet-wide), 0600.
 mkdir -p ~/.config/claude-monitor
-TOKEN=$(ssh marcin@10.0.1.121 'cat /run/secrets/monitor_token')
+TOKEN=$(ssh marcin@10.0.1.121 'cat /run/secrets/monitor_token') || { echo "ERROR: failed to fetch monitor token" >&2; exit 1; }
+[ -n "$TOKEN" ] || { echo "ERROR: monitor token is empty" >&2; exit 1; }
 install -m 600 /dev/stdin ~/.config/claude-monitor/token <<< "$TOKEN"
 
 # Signing key, reused from the matching CT (personal .120, evojam .121, parloa .122).
@@ -79,8 +83,10 @@ case "$c" in
   personal) CONTAINER_IP=10.0.1.120 ;;
   evojam) CONTAINER_IP=10.0.1.121 ;;
   parloa) CONTAINER_IP=10.0.1.122 ;;
+  *) echo "ERROR: unknown client '$c' (expected personal, evojam, or parloa)" >&2; exit 1 ;;
 esac
-KEY=$(ssh marcin@$CONTAINER_IP 'cat /run/secrets/ssh_signing_key')
+KEY=$(ssh marcin@$CONTAINER_IP 'cat /run/secrets/ssh_signing_key') || { echo "ERROR: failed to fetch signing key from $CONTAINER_IP for client $c" >&2; exit 1; }
+[ -n "$KEY" ] || { echo "ERROR: signing key is empty" >&2; exit 1; }
 # ⚠️ WARNING: home/profiles/allowed_signers in this repo has NO trailing newline
 # on its final line. If this key ever needs to be added to that file, it must be
 # edited to terminate the existing final line first, or appending with >> will
