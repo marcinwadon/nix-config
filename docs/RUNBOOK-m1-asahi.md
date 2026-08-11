@@ -197,27 +197,60 @@ shredded whether the build succeeded or not.
 ## Step 4 — operator, as root, once, after Step 3 has run for all three users
 
 Fish is installed **by home-manager**, so it does not exist on the box until
-each user's Step 3 activation has run — doing this before Step 3 would `chsh`
-to a path that doesn't exist yet, and `chsh` refuses a shell absent from
-`/etc/shells`. That is why this is its own step, sequenced *after* Step 3
-rather than folded into Step 1: do not "tidy" it back to before activation.
+each user's Step 3 activation has run. That is why this is its own step,
+sequenced *after* Step 3 rather than folded into Step 1.
+
+**Do not `chsh` straight to the nix-store fish.** It looks right and it locks
+every account out. Two independent reasons, both found by doing it:
+
+1. **SELinux is enforcing here, and it will not let `sshd` exec a `/nix/store`
+   binary as a login shell.** Store files are labelled `default_t`; Fedora's
+   policy wants a login shell to be `shell_exec_t` (`/bin/bash` is). The
+   symptom is a bare `…/bin/fish: Permission denied` at login, which reads like
+   a file-permission problem and is not one. The NixOS containers never showed
+   this because NixOS carries no such policy.
+2. **Nothing on the fish path sources `/etc/profile.d/nix.sh`**, so fish starts
+   without `~/.nix-profile/bin` and loses `git`, `tmux`, `fzf`, `direnv` and
+   `any-nix-shell` — a wall of `Unknown command` on every login.
+
+Use a shim in `/usr/local/bin` instead. That directory is `bin_t`, which *is*
+acceptable as a login shell (`/bin/sh` is `bin_t` too), and the shim runs as the
+user, where exec'ing a store binary is allowed:
+
+```bash
+sudo tee /usr/local/bin/fish-login >/dev/null <<'W'
+#!/bin/sh
+# Login-shell shim for the nix-managed users. SELinux will not let sshd exec a
+# /nix/store binary (default_t) as a login shell; /usr/local/bin is bin_t, which
+# is acceptable. Sourcing nix.sh is what puts ~/.nix-profile/bin on PATH — fish
+# would otherwise start without git/tmux/fzf/direnv/any-nix-shell. Falls back to
+# bash so a broken or missing nix profile can never lock the account out.
+[ -r /etc/profile.d/nix.sh ] && . /etc/profile.d/nix.sh
+F="$HOME/.nix-profile/bin/fish"
+[ -x "$F" ] && exec "$F" "$@"
+exec /bin/bash "$@"
+W
+sudo chmod 755 /usr/local/bin/fish-login
+sudo restorecon -v /usr/local/bin/fish-login
+grep -qxF /usr/local/bin/fish-login /etc/shells || echo /usr/local/bin/fish-login | sudo tee -a /etc/shells >/dev/null
+for c in personal evojam parloa; do sudo chsh -s /usr/local/bin/fish-login "marcin-$c"; done
+```
+
+One shim serves all three users: `$HOME` is set by `sshd` before the login shell
+runs, so the same file resolves each user's own profile.
+
+The bash fallback is deliberate and worth keeping. A login shell is the one
+thing on a box you cannot afford to get wrong — if it fails you cannot log in to
+fix it. Recovery, should you ever need it, is `ssh marcin@10.0.1.91` (whose
+shell is untouched) and `sudo chsh -s /bin/bash marcin-<client>`.
+
+Verify — each user should report the shim, all five tools, and a fish version:
 
 ```bash
 for c in personal evojam parloa; do
-  FISH=$(sudo -i -u "marcin-$c" command -v fish) || { echo "ERROR: fish not found for marcin-$c — did Step 3 activation succeed?" >&2; continue; }
-  grep -qxF "$FISH" /etc/shells || echo "$FISH" | sudo tee -a /etc/shells >/dev/null
-  sudo chsh -s "$FISH" "marcin-$c"
-  echo "marcin-$c -> $FISH"
+  ssh "marcin-$c@10.0.1.91" 'echo $SHELL; for t in git tmux fzf direnv any-nix-shell; type -q $t; or echo "MISSING: $t"; end; fish --version'
 done
 ```
-
-`sudo -i -u` requests a real login shell for the target user, which is what
-makes their home-manager-managed `PATH` (and therefore `fish`) visible to
-`command -v` — a bare `sudo -u` or a non-login `ssh user@host 'command'` would
-not reliably see it. Only `sh` and `bash` are listed in `/etc/shells` by
-default on this box, so `fish` must be appended before `chsh` will accept it.
-
-Verify: `getent passwd marcin-parloa | cut -d: -f7` ends in `/fish`.
 
 ## Step 5 — operator, interactive, once per user (cannot be scripted)
 
