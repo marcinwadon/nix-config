@@ -24,6 +24,7 @@
       pkgs.bottom
       pkgs.cachix
       pkgs.claude-code
+      pkgs.codex
       pkgs.dig
       pkgs.duf
       pkgs.eza
