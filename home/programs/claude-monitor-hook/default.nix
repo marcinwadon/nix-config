@@ -81,6 +81,10 @@
     export MONITOR_URL="${p.monitorUrl}"
     export MONITOR_MACHINE="${toString machine}"
     export CLAUDE_ACP_CMD="${pkgs.claude-agent-acp}/bin/claude-agent-acp"
+    # The host probes each runtime's argv[0] with exec.LookPath and advertises
+    # only what actually resolves, so WITHOUT this the machine never offers
+    # codex and the runtime picker never shows it.
+    export CODEX_ACP_CMD="${pkgs.codex-acp}/bin/codex-acp"
     export PATH="${hostPath}:$PATH"
     unset CLAUDECODE CLAUDE_CODE_ENTRYPOINT CLAUDE_CODE_SSE_PORT
     exec ${pkgs.claude-monitor-hook}/bin/claude-monitor-host

@@ -27,6 +27,14 @@
         claude-monitor-hook = inputs.claude-monitor.packages.${system}.claude-monitor-hook;
         # The ACP adapter the per-machine host spawns (Zed's claude-agent-acp).
         claude-agent-acp = inputs.claude-monitor.packages.${system}.claude-agent-acp;
+        # The second ACP adapter (OpenAI Codex), spawned when a session's
+        # runtime is "codex". Same source as the Claude adapter above.
+        codex-acp = inputs.claude-monitor.packages.${system}.codex-acp;
+        # The codex CLI itself, from the SAME FOD as the adapter above, so the
+        # binary the operator runs `codex login` with and the adapter that reads
+        # the resulting ~/.codex/auth.json are the same build. nixpkgs' `codex`
+        # is 0.118.0; this is whatever the pinned adapter bundles (0.148.0).
+        codex-cli = inputs.claude-monitor.packages.${system}.codex-cli;
       })
       # herdr (agent multiplexer). Package-ref only — do NOT use its
       # overlays.default, which composes in the entire rust-overlay.

@@ -24,7 +24,9 @@
       pkgs.bottom
       pkgs.cachix
       pkgs.claude-code
-      pkgs.codex
+      # From claude-monitor's flake, not nixpkgs: see outputs/home-conf.nix.
+      # nixpkgs ships 0.118.0; this tracks the pinned ACP adapter's bundled CLI.
+      pkgs.codex-cli
       pkgs.dig
       pkgs.duf
       pkgs.eza
