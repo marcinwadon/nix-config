@@ -83,6 +83,12 @@ in {
   # file: it never rewrites what is already there, and it says so loudly if a
   # [sandbox_workspace_write] table exists that it cannot safely extend. Same
   # shape as claudeStatuslineSettings merging settings.json.
+  #
+  # Create-once by design: it skips when `writable_roots` is already present, so
+  # changing the intended root set here does NOT reach a machine that already ran
+  # it — edit ~/.codex/config.toml on that machine, or drop the line first.
+  # Verified that Codex preserves the table: `codex mcp add`/`remove` round-trips
+  # config.toml surgically, leaving this block and its comments intact.
   home.activation.codexWritableRoots = (
     lib.hm.dag.entryAfter ["writeBoundary"] ''
       CFG="$HOME/.codex/config.toml"
