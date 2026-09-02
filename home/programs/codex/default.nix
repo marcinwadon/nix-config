@@ -46,8 +46,12 @@
     done
   '';
 
-  # Already authored as SKILL.md — shared verbatim with Claude Code.
-  sharedSkillDirs = ["grill" "fix-dependabot-alerts"];
+  # Already authored as SKILL.md — shared verbatim with Claude Code. Derived, not
+  # listed, so a skill added for Claude reaches Codex without a second edit.
+  sharedSkillDirs =
+    builtins.attrNames
+    (lib.filterAttrs (_: t: t == "directory")
+      (builtins.readDir (claudeFiles + "/skills")));
 
   mkLink = name: source: {
     inherit name;
@@ -70,36 +74,43 @@
   # writable directory, shared with Codex's own `.system` skills and whatever
   # its skill-installer drops there.
   files = {".codex/AGENTS.md" = {source = ./files/AGENTS.md;};} // skillLinks;
-in {
-  home.file = files;
 
-  # Codex sandboxes writes to the workspace, so a session running inside a repo
-  # cannot append to ~/.claude/rules — measured: "operation not permitted",
-  # which would leave the auto-update memory contract in AGENTS.md read-only in
-  # practice. Grant that one directory as an extra writable root.
-  #
-  # ~/.codex/config.toml is Codex's OWN mutable state (auth mode, plugin
-  # toggles, per-project trust), so this is a guarded append, not a managed
-  # file: it never rewrites what is already there, and it says so loudly if a
-  # [sandbox_workspace_write] table exists that it cannot safely extend. Same
-  # shape as claudeStatuslineSettings merging settings.json.
-  #
-  # Create-once by design: it skips when `writable_roots` is already present, so
-  # changing the intended root set here does NOT reach a machine that already ran
-  # it — edit ~/.codex/config.toml on that machine, or drop the line first.
-  # Verified that Codex preserves the table: `codex mcp add`/`remove` round-trips
-  # config.toml surgically, leaving this block and its comments intact.
-  home.activation.codexWritableRoots = (
-    lib.hm.dag.entryAfter ["writeBoundary"] ''
-      CFG="$HOME/.codex/config.toml"
-      [ -e "$CFG" ] || : > "$CFG"
-      if ${pkgs.gnugrep}/bin/grep -q 'writable_roots' "$CFG"; then
-        :
-      elif ${pkgs.gnugrep}/bin/grep -q '^\[sandbox_workspace_write\]' "$CFG"; then
-        echo "codex: [sandbox_workspace_write] exists without writable_roots in $CFG; add $HOME/.claude/rules by hand or Codex cannot write its memory." >&2
-      else
-        printf '\n[sandbox_workspace_write]\n# Added by nix-config: lets a Codex session append to the shared memory\n# files in ~/.claude/rules (see ~/.codex/AGENTS.md).\nwritable_roots = ["%s/.claude/rules"]\n' "$HOME" >> "$CFG"
-      fi
-    ''
-  );
-}
+  # Both skill sets are derived, and listToAttrs would silently keep only the
+  # last entry for a shared name — so fail the build instead of shipping one
+  # workflow that quietly shadowed another.
+  clash = lib.intersectLists sharedSkillDirs commandNames;
+in
+  assert lib.assertMsg (clash == [])
+  "codex: a skill and a command share a name: ${lib.concatStringsSep ", " clash}"; {
+    home.file = files;
+
+    # Codex sandboxes writes to the workspace, so a session running inside a repo
+    # cannot append to ~/.claude/rules — measured: "operation not permitted",
+    # which would leave the auto-update memory contract in AGENTS.md read-only in
+    # practice. Grant that one directory as an extra writable root.
+    #
+    # ~/.codex/config.toml is Codex's OWN mutable state (auth mode, plugin
+    # toggles, per-project trust), so this is a guarded append, not a managed
+    # file: it never rewrites what is already there, and it says so loudly if a
+    # [sandbox_workspace_write] table exists that it cannot safely extend. Same
+    # shape as claudeStatuslineSettings merging settings.json.
+    #
+    # Create-once by design: it skips when `writable_roots` is already present, so
+    # changing the intended root set here does NOT reach a machine that already ran
+    # it — edit ~/.codex/config.toml on that machine, or drop the line first.
+    # Verified that Codex preserves the table: `codex mcp add`/`remove` round-trips
+    # config.toml surgically, leaving this block and its comments intact.
+    home.activation.codexWritableRoots = (
+      lib.hm.dag.entryAfter ["writeBoundary"] ''
+        CFG="$HOME/.codex/config.toml"
+        [ -e "$CFG" ] || : > "$CFG"
+        if ${pkgs.gnugrep}/bin/grep -q 'writable_roots' "$CFG"; then
+          :
+        elif ${pkgs.gnugrep}/bin/grep -q '^\[sandbox_workspace_write\]' "$CFG"; then
+          echo "codex: [sandbox_workspace_write] exists without writable_roots in $CFG; add $HOME/.claude/rules by hand or Codex cannot write its memory." >&2
+        else
+          printf '\n[sandbox_workspace_write]\n# Added by nix-config: lets a Codex session append to the shared memory\n# files in ~/.claude/rules (see ~/.codex/AGENTS.md).\nwritable_roots = ["%s/.claude/rules"]\n' "$HOME" >> "$CFG"
+        fi
+      ''
+    );
+  }
