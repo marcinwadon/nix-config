@@ -48,6 +48,9 @@
 
   # Already authored as SKILL.md — shared verbatim with Claude Code. Derived, not
   # listed, so a skill added for Claude reaches Codex without a second edit.
+  # NOTE: this directory is what Claude reads on the CTs (shareClaudeConfig) and
+  # what Codex reads everywhere — but NOT what Claude reads on the Mac, which
+  # keeps its own live ~/.claude. See docs/RUNBOOK-codex-parity.md.
   sharedSkillDirs =
     builtins.attrNames
     (lib.filterAttrs (_: t: t == "directory")

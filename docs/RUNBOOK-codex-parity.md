@@ -94,3 +94,24 @@ codex exec "Kim jestem i gdzie pracuję? Odpowiedz jednym zdaniem."
 
 It should read `~/.claude/rules/memory-profile.md` and answer from it. If it
 answers without reading anything, `~/.codex/AGENTS.md` did not load.
+
+## Known caveat — the Mac's `~/.claude` is still the live copy
+
+`home/programs/claude-code/files/` is authoritative for **Codex everywhere**, and
+for **Claude on the CTs** (where `shareClaudeConfig = true` symlinks
+`~/.claude/{skills,commands}` out of the repo).
+
+On the **Mac** it is not: `shareClaudeConfig = false`, so Claude keeps reading the
+live, hand-editable `~/.claude/skills` and `~/.claude/commands`, while Codex reads
+the derivation built from the repo. They were made byte-identical by hand when
+this landed — that is a snapshot, not a mechanism. Edit a live command on the Mac
+and Codex will keep serving the older body, silently.
+
+Two ways out, both the operator's call:
+
+1. Accept it, and copy into `home/programs/claude-code/files/` when editing a
+   command or skill on the Mac.
+2. Link **only** `~/.claude/skills` and `~/.claude/commands` on the Mac (not the
+   whole `shareClaudeConfig`, which would also capture `CLAUDE.md` and
+   `agents/`). Small diff — but it turns files that are edited by hand today into
+   read-only store symlinks.
