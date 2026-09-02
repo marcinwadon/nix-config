@@ -3,9 +3,17 @@
 `home/programs/codex/` gives Codex the same memory, skills and workflows Claude
 Code has. It is home-manager only: no new secret, no system rebuild, no service.
 
-Applied on the Mac already (`./switch home`). Everything below is the rest of the
-fleet. Each host needs **one Yubikey touch** for the SSH key, which is why this
-is a runbook and not a script the assistant can run unattended.
+**Rolled out 2026-09-02: Mac + all 4 LXC hosts + all 3 m1 users.** Keep this for
+the next host, or for re-running after a change. Each host needs **one Yubikey
+touch**; reuse the connection so it is one touch and not four:
+
+```bash
+ssh -o ControlMaster=auto -o ControlPath=/tmp/sshctl/%r@%h -o ControlPersist=900 root@$IP ...
+```
+
+Write those options **inline** — the login shell is zsh, where an unquoted
+`$SSHO` variable is not word-split and ssh fails with
+`keyword controlmaster extra arguments at end of line`.
 
 ## What has to reach each host
 
@@ -115,3 +123,30 @@ Two ways out, both the operator's call:
    whole `shareClaudeConfig`, which would also capture `CLAUDE.md` and
    `agents/`). Small diff — but it turns files that are edited by hand today into
    read-only store symlinks.
+
+## `codex login` is a separate, per-user step
+
+The config is inert until the user is authenticated. As of the 2026-09-02
+rollout only `marcin-parloa` on the m1 had `~/.codex/auth.json`; the other five
+Linux users return `401 Unauthorized`. Per user:
+
+```bash
+codex login          # then check: test -s ~/.codex/auth.json
+```
+
+## Memory content is synced out of band, not through this repo
+
+`~/.claude/rules/memory-{profile,preferences,workflow,tools}.md` are copied
+Mac→host with `scp`, never committed — memory content stays out of the public
+repo. It is a **merge**: the host's own grown tail is preserved below a
+`## Machine-local notes` separator (m1-parloa's fnm/pnpm notes, for example).
+`memory-decisions.md` and `memory-sessions.md` stay per-machine by design.
+
+Two traps, both hit for real during the rollout:
+
+- Back up first (`cp -n $f $f.bak-pre-sync`) **in the same command** as the
+  write. A `cat "$SRC" | ssh 'cat > dest'` whose local side fails delivers
+  nothing and **truncates the destination to 0 bytes**; the backup is what makes
+  that free. Guard it: `[ -s "$SRC" ] || continue`.
+- In zsh, `"m1-$c__$f.md"` is the variable `c__`, not `$c` followed by `__`.
+  Use `${c}__${f}`. This is exactly how the truncation above happened.
