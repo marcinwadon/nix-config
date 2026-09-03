@@ -1,5 +1,5 @@
 ---
-name: mvp-grill
+name: grill
 description: >
   Fast, MVP-focused grilling session for plans, prototypes, designs, or feature
   ideas. Use when the user wants to stress-test direction, clarify assumptions,

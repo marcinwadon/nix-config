@@ -20,6 +20,8 @@
   sops.secrets.slack_channel_id = {};
   sops.secrets.llm_api_key = {};
   sops.secrets.llm_base_url = {};
+  sops.secrets.brain_deploy_key = {};
+  sops.secrets.brain_channel_id = {};
 
   # LAN-only: 8787 = HTTP machine plane (hosts dial ws://, hooks POST);
   # 8443 = HTTPS for the browser/PWA (Service Workers need a secure context).
@@ -32,6 +34,24 @@
     serviceConfig = {
       ExecStart = pkgs.writeShellScript "claude-monitor-start" ''
         export MONITOR_TOKEN="$(cat "$CREDENTIALS_DIRECTORY/monitor_token")"
+        export HOME="/var/lib/claude-monitor"
+        export PATH="${pkgs.lib.makeBinPath [pkgs.git pkgs.openssh]}:$PATH"
+        export GIT_SSH_COMMAND="${pkgs.openssh}/bin/ssh -i $CREDENTIALS_DIRECTORY/brain_deploy_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile=/var/lib/claude-monitor/brain-known-hosts"
+        export GIT_AUTHOR_NAME="claude-monitor"
+        export GIT_AUTHOR_EMAIL="claude-monitor@users.noreply.github.com"
+        export GIT_COMMITTER_NAME="$GIT_AUTHOR_NAME"
+        export GIT_COMMITTER_EMAIL="$GIT_AUTHOR_EMAIL"
+
+        export BRAIN_VAULT="/var/lib/claude-monitor/brain"
+        export BRAIN_DB="/var/lib/claude-monitor/brain-index.db"
+        export BRAIN_GIT_PUSH=1
+        export BRAIN_MAX_SOURCE_BYTES=8388608
+        if [ ! -d "$BRAIN_VAULT/.git" ]; then
+          ${pkgs.git}/bin/git clone --branch main git@github.com:marcinwadon/second-brain.git "$BRAIN_VAULT"
+        fi
+        ${pkgs.git}/bin/git -C "$BRAIN_VAULT" config user.name "$GIT_AUTHOR_NAME"
+        ${pkgs.git}/bin/git -C "$BRAIN_VAULT" config user.email "$GIT_AUTHOR_EMAIL"
+        ${pkgs.git}/bin/git -C "$BRAIN_VAULT" config commit.gpgsign false
         # Dual-listener: HTTP :8787 (machines) always; HTTPS :8443 (browser/PWA)
         # with an auto self-signed cert. Cert + VAPID keys persist under the
         # StateDirectory (/var/lib/claude-monitor/tls). Trust the cert once per
@@ -51,7 +71,7 @@
         # leading ~ itself); a root that does not exist there is skipped, and
         # browse is additionally fenced to the host's home directory. Unset →
         # the picker falls back to paths derived from session history.
-        export WORKSPACE_ROOTS="mac=/Users/marcinwadon/Projects/parloa,/Users/marcinwadon/Projects/marcinwadon,/Users/marcinwadon/Projects/evojam;personal=/home/marcin/Projects;evojam=/home/marcin/Projects;parloa=/home/marcin/Projects"
+        export WORKSPACE_ROOTS="mac=/Users/marcinwadon/Projects/parloa,/Users/marcinwadon/Projects/marcinwadon,/Users/marcinwadon/Projects/evojam;personal=/home/marcin/Projects;evojam=/home/marcin/Projects;parloa=/home/marcin/Projects;m1-personal=/home/marcin-personal/Projects;m1-evojam=/home/marcin-evojam/Projects;m1-parloa=/home/marcin-parloa/Projects"
         exec ${pkgs.claude-monitor}/bin/claude-monitor -addr :8787 -db /var/lib/claude-monitor/cm.db
       '';
       # systemd reads the sops secret as root and exposes it to the (dynamic)
@@ -60,6 +80,7 @@
         "monitor_token:/run/secrets/monitor_token"
         "llm_api_key:/run/secrets/llm_api_key"
         "llm_base_url:/run/secrets/llm_base_url"
+        "brain_deploy_key:/run/secrets/brain_deploy_key"
       ];
       DynamicUser = true;
       StateDirectory = "claude-monitor"; # /var/lib/claude-monitor (db lives here)
@@ -70,9 +91,9 @@
 
   # Orchestrator: a headless sidecar that watches the collector's /stream SSE,
   # triages blocked sessions through an LLM + policy (via the operator's LiteLLM
-  # gateway), and relays to Slack (Socket Mode) with a live board. It is a plain
-  # dashboard client over localhost:8787 — no new collector endpoints, no token
-  # needed. Slack Socket Mode is an outbound WebSocket, so no inbound port either.
+  # gateway), and relays to Slack (Socket Mode) with a live board. Brain actions
+  # use the collector token; Slack Socket Mode is an outbound WebSocket, so no
+  # inbound port is needed.
   systemd.services.claude-monitor-orchestrator = {
     description = "claude-monitor Slack session orchestrator";
     wantedBy = ["multi-user.target"];
@@ -87,6 +108,10 @@
         export SLACK_CHANNEL_ID="$(cat "$CREDENTIALS_DIRECTORY/slack_channel_id")"
         export LLM_API_KEY="$(cat "$CREDENTIALS_DIRECTORY/llm_api_key")"
         export LLM_BASE_URL="$(cat "$CREDENTIALS_DIRECTORY/llm_base_url")"
+        export MONITOR_TOKEN="$(cat "$CREDENTIALS_DIRECTORY/monitor_token")"
+        export BRAIN_CHANNEL_ID="$(cat "$CREDENTIALS_DIRECTORY/brain_channel_id")"
+        export BRAIN_REVIEW_DAILY_CAP=1
+        export BRAIN_REVIEW_QUESTION_CAP=2
         # Non-secret config (safe in the public repo).
         export LLM_MODEL="claude-sonnet-4-6"
         export COLLECTOR_BASE_URL="http://localhost:8787"
@@ -103,7 +128,7 @@
         # Deliberately mac-only, and deliberately NOT the same value as the
         # collector's WORKSPACE_ROOTS above: this one only backs natural-language
         # launch (mac is the only machine launched that way), while the
-        # collector's drives the dashboard's project picker on all four hosts.
+        # collector's drives the dashboard's project picker on all seven hosts.
         # Same variable name, two consumers — not a copy-paste slip.
         export WORKSPACE_ROOTS="mac=/Users/marcinwadon/Projects/parloa,/Users/marcinwadon/Projects/marcinwadon,/Users/marcinwadon/Projects/evojam"
         # Policy file is optional: a missing path falls back to the built-in
@@ -118,6 +143,8 @@
         "slack_channel_id:/run/secrets/slack_channel_id"
         "llm_api_key:/run/secrets/llm_api_key"
         "llm_base_url:/run/secrets/llm_base_url"
+        "monitor_token:/run/secrets/monitor_token"
+        "brain_channel_id:/run/secrets/brain_channel_id"
       ];
       DynamicUser = true;
       StateDirectory = "claude-monitor-orchestrator"; # /var/lib/... (db + optional policy.md)

@@ -45,9 +45,16 @@
 
   # claude-monitor hook wiring. monitorMachine = null disables the hook entirely
   # (the collector-only "monitor" box and any unconfigured profile). Set it to
-  # this machine's label ("mac"/"personal"/"evojam"/"parloa") to install the
-  # hook + merge it into ~/.claude/settings.json. monitorUrl points at the
-  # collector LXC on the LAN.
+  # this machine's label ("mac"/"personal"/"evojam"/"parloa"/"m1-personal"/
+  # "m1-evojam"/"m1-parloa") to install the hook + merge it into
+  # ~/.claude/settings.json. monitorUrl points at the collector LXC on the LAN.
   monitorMachine = null;
   monitorUrl = "http://10.0.1.123:8787";
+
+  # Absolute path the hook/tailer/host wrappers read MONITOR_TOKEN from at
+  # runtime. null = derive the platform default (sops on NixOS, ~/.config on
+  # darwin). Set it explicitly on a Linux box that has no sops-nix — otherwise
+  # the token file is unreadable, MONITOR_TOKEN stays unset, and the host
+  # silently never registers with the collector.
+  monitorTokenFile = null;
 }

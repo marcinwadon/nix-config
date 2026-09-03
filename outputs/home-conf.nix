@@ -27,6 +27,14 @@
         claude-monitor-hook = inputs.claude-monitor.packages.${system}.claude-monitor-hook;
         # The ACP adapter the per-machine host spawns (Zed's claude-agent-acp).
         claude-agent-acp = inputs.claude-monitor.packages.${system}.claude-agent-acp;
+        # The second ACP adapter (OpenAI Codex), spawned when a session's
+        # runtime is "codex". Same source as the Claude adapter above.
+        codex-acp = inputs.claude-monitor.packages.${system}.codex-acp;
+        # The codex CLI itself, from the SAME FOD as the adapter above, so the
+        # binary the operator runs `codex login` with and the adapter that reads
+        # the resulting ~/.codex/auth.json are the same build. nixpkgs' `codex`
+        # is 0.118.0; this is whatever the pinned adapter bundles (0.148.0).
+        codex-cli = inputs.claude-monitor.packages.${system}.codex-cli;
       })
       # herdr (agent multiplexer). Package-ref only — do NOT use its
       # overlays.default, which composes in the entire rust-overlay.
@@ -49,14 +57,18 @@
   mkHome = {
     system,
     profile,
+    # Load-bearing default: it exists ONLY so the Darwin call site below (the
+    # sole caller that omits homeModules) keeps importing neovim-flake
+    # unchanged. Every Linux caller MUST pass `homeModules = []` explicitly —
+    # neovim-flake can't build there (see mkOverlays' comment) — so dropping
+    # this default "for simplicity" would silently restore an
+    # unconditional Darwin-only import for any Linux caller that forgets to.
+    homeModules ? [inputs.neovim-flake.homeManagerModules.${system}.default],
   }:
     inputs.home-manager.lib.homeManagerConfiguration {
       pkgs = mkPkgs system;
       extraSpecialArgs = {inherit profile;};
-      modules = [
-        inputs.neovim-flake.homeManagerModules.${system}.default
-        ../home/home.nix
-      ];
+      modules = homeModules ++ [../home/home.nix];
     };
 in {
   # Exposed builders so the NixOS layer can reuse the same module set.
@@ -66,5 +78,23 @@ in {
   homeConfigurations.marcinwadon = mkHome {
     system = "aarch64-darwin";
     profile = import ../home/profiles/darwin.nix;
+  };
+
+  # Mac mini M1 (Fedora Asahi Remix) — three standalone users, one per client
+  # identity. homeModules = [] because neovim-flake is Darwin-only.
+  homeConfigurations.m1-personal = mkHome {
+    system = "aarch64-linux";
+    profile = import ../home/profiles/m1-personal.nix;
+    homeModules = [];
+  };
+  homeConfigurations.m1-evojam = mkHome {
+    system = "aarch64-linux";
+    profile = import ../home/profiles/m1-evojam.nix;
+    homeModules = [];
+  };
+  homeConfigurations.m1-parloa = mkHome {
+    system = "aarch64-linux";
+    profile = import ../home/profiles/m1-parloa.nix;
+    homeModules = [];
   };
 }

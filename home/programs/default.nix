@@ -88,6 +88,7 @@ in [
   ./tmux
   neovim
   ./claude-code
+  ./codex
   ./claude-monitor-hook
   more
 ]

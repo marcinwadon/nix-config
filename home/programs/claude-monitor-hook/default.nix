@@ -10,9 +10,14 @@
 # turn ends, and the final assistant message can't be streamed early.
 #
 # The wrapper carries the non-secret MONITOR_URL/MONITOR_MACHINE as literals and
-# reads MONITOR_TOKEN from a file at RUNTIME — sops (/run/secrets/monitor_token)
-# on Linux containers, ~/.config/claude-monitor/token on darwin (no sops there).
-# Nothing secret is baked into the Nix store.
+# reads MONITOR_TOKEN from a file at RUNTIME. The default token path is sops
+# (/run/secrets/monitor_token) on Linux, ~/.config/claude-monitor/token on
+# darwin (no sops there) — but a profile can override this via
+# `monitorTokenFile` (home/lib/profile-defaults.nix), which this module reads
+# below and prefers over both platform defaults. That override exists for
+# Linux boxes with no sops-nix at all (the M1 Asahi host): without it the
+# token file is unreadable, MONITOR_TOKEN stays unset, and the host silently
+# never registers. Nothing secret is baked into the Nix store.
 {
   pkgs,
   lib,
@@ -26,7 +31,9 @@
   enable = machine != null;
 
   tokenFile =
-    if pkgs.stdenv.isLinux
+    if p.monitorTokenFile != null
+    then p.monitorTokenFile
+    else if pkgs.stdenv.isLinux
     then "/run/secrets/monitor_token"
     else "${config.home.homeDirectory}/.config/claude-monitor/token";
 
@@ -74,6 +81,10 @@
     export MONITOR_URL="${p.monitorUrl}"
     export MONITOR_MACHINE="${toString machine}"
     export CLAUDE_ACP_CMD="${pkgs.claude-agent-acp}/bin/claude-agent-acp"
+    # The host probes each runtime's argv[0] with exec.LookPath and advertises
+    # only what actually resolves, so WITHOUT this the machine never offers
+    # codex and the runtime picker never shows it.
+    export CODEX_ACP_CMD="${pkgs.codex-acp}/bin/codex-acp"
     export PATH="${hostPath}:$PATH"
     unset CLAUDECODE CLAUDE_CODE_ENTRYPOINT CLAUDE_CODE_SSE_PORT
     exec ${pkgs.claude-monitor-hook}/bin/claude-monitor-host
@@ -87,10 +98,17 @@
     export MONITOR_MACHINE="${toString machine}"
     exec ${pkgs.claude-monitor-hook}/bin/claude-monitor-cm-acp "$@"
   '';
+
+  brainctl = pkgs.writeShellScriptBin "brainctl" ''
+    [ -r "${tokenFile}" ] && export MONITOR_TOKEN="$(<"${tokenFile}")"
+    export MONITOR_URL="${p.monitorUrl}"
+    export MACHINE="${toString machine}"
+    exec ${pkgs.claude-monitor-hook}/bin/claude-monitor-brainctl "$@"
+  '';
 in
   lib.mkIf enable (lib.mkMerge [
     {
-      home.packages = [pkgs.claude-monitor-hook cmAcp];
+      home.packages = [pkgs.claude-monitor-hook cmAcp brainctl];
 
       # Runs after claudeStatuslineSettings (same file) so that key is preserved.
       home.activation.claudeMonitorHooks = lib.hm.dag.entryAfter ["writeBoundary" "claudeStatuslineSettings"] ''

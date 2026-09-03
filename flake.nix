@@ -91,23 +91,103 @@
 
     nixosConfigurations = import ./outputs/nixos-conf.nix {inherit inputs;};
 
-    # Guard: fail `nix flake check` if any Linux container's fish config leaks a
-    # GitHub token literal or runs the gpg-agent (gpgconf) — the class of bug a
-    # code review caught earlier. Eval-only over the x86_64-linux configs, so it
-    # runs on the darwin build host without a Linux builder.
-    checks.${system}.no-linux-secret-leak = let
-      lib = inputs.nixpkgs.lib;
-      forbidden = ["ghp_" "ghs_" "github_pat_" "gpgconf"];
-      rendered = lib.concatMapStringsSep "\n" (e: let
-        f = self.nixosConfigurations.${e}.config.home-manager.users.marcin.programs.fish;
+    # checks.${system} is a single dynamic-attribute-path binding: `${system}`
+    # is computed, so (unlike a literal identifier) Nix cannot merge two
+    # separate `checks.${system}.foo = ...;`/`checks.${system}.bar = ...;`
+    # bindings in one attrset literal ("dynamic attribute ... already
+    # defined") — both checks below must live under one `checks.${system} =
+    # { ... };` assignment.
+    checks.${system} = {
+      # Guard: fail `nix flake check` if any Linux fish config — a NixOS
+      # container's or one of the three M1 standalone home configurations'
+      # (which are NOT containers) — leaks a GitHub token literal or runs the
+      # gpg-agent (gpgconf), the class of bug a code review caught earlier.
+      # Eval-only, so it runs on the darwin build host without a Linux
+      # builder — which matters more now than when this comment was first
+      # written: there is no aarch64-linux builder anywhere in this setup, so
+      # eval-only is the ONLY way this guard can run against the M1 configs
+      # at all.
+      #
+      # minRenderLen is a tripwire against a VACUOUS pass: `hits == []` is
+      # also true if `rendered` is empty (an option rename, a Linux/Darwin
+      # branch, a module going unimported would all silently zero out
+      # programs.fish). A real render is ~1.4-2.5k chars per config; 200 is
+      # comfortably below every real config and comfortably above the
+      # handful of newline separators a broken/empty render would produce.
+      # Checked separately per group so one group going empty can't hide
+      # behind the other's real content.
+      no-linux-secret-leak = let
+        lib = inputs.nixpkgs.lib;
+        forbidden = ["ghp_" "ghs_" "github_pat_" "gpgconf"];
+        minRenderLen = 200;
+        renderFish = f: (f.shellInit or "") + "\n" + (f.interactiveShellInit or "");
+        renderedNixos = lib.concatMapStringsSep "\n" (e:
+          renderFish self.nixosConfigurations.${e}.config.home-manager.users.marcin.programs.fish)
+        ["personal" "evojam" "parloa" "monitor"];
+        renderedM1 = lib.concatMapStringsSep "\n" (c:
+          renderFish self.homeConfigurations.${c}.config.programs.fish)
+        ["m1-personal" "m1-evojam" "m1-parloa"];
+        rendered = renderedNixos + "\n" + renderedM1;
+        hits = lib.filter (p: lib.hasInfix p rendered) forbidden;
       in
-        (f.shellInit or "") + "\n" + (f.interactiveShellInit or ""))
-      ["personal" "evojam" "parloa" "monitor"];
-      hits = lib.filter (p: lib.hasInfix p rendered) forbidden;
-    in
-      if hits == []
-      then pkgs.runCommand "no-linux-secret-leak" {} "echo ok > $out"
-      else throw "SECRET LEAK in linux fish config — matched: ${toString hits}";
+        if builtins.stringLength renderedNixos < minRenderLen
+        then throw "no-linux-secret-leak: nixos fish render is suspiciously short (${toString (builtins.stringLength renderedNixos)} chars, expected >= ${toString minRenderLen}) — this check would otherwise pass VACUOUSLY; investigate before trusting a clean result"
+        else if builtins.stringLength renderedM1 < minRenderLen
+        then throw "no-linux-secret-leak: m1 fish render is suspiciously short (${toString (builtins.stringLength renderedM1)} chars, expected >= ${toString minRenderLen}) — this check would otherwise pass VACUOUSLY; investigate before trusting a clean result"
+        else if hits == []
+        then pkgs.runCommand "no-linux-secret-leak" {} "echo ok > $out"
+        else throw "SECRET LEAK in linux fish config — matched: ${toString hits}";
+
+      # Guard: the three M1 home configurations have no sops-nix, so unlike
+      # the nixos configs (which legitimately reference /run/secrets
+      # everywhere — this string can't join the check above's `forbidden`
+      # list), a /run/secrets path surviving into an M1 config's rendered
+      # ssh or git settings is ALWAYS a bug: home/profiles/m1-common.nix
+      # exists solely to repoint every such path at a real file under the
+      # user's home. Renders (not option paths) because a rendered artifact
+      # is what actually reaches disk — see home/profiles/m1-common.nix for
+      # the two override styles this regression-guards.
+      #
+      # ssh and git are checked INDEPENDENTLY, per client — four sub-checks,
+      # not two. Concatenating them into one string before checking (the
+      # first version of this guard) moves the vacuous-pass risk rather than
+      # removing it: `cfg.home.file.".ssh/config".text or ""` silently
+      # degrades to "" if that home.file key is ever renamed or the ssh
+      # module changes what it emits, and a still-substantial git JSON
+      # (~1.4-1.5k chars) would mask that emptiness — both the length check
+      # and any /run/secrets search on the now ssh-blind concatenation would
+      # stay clean while the ssh side is actually unobserved.
+      #
+      # Thresholds are calibrated per field, not shared, because the two
+      # fields have different natural sizes: real ssh renders measured
+      # ~348-350 chars/client, real git JSON ~1419-1456 chars/client. Each
+      # threshold sits comfortably below its field's measured real value and
+      # comfortably above a degenerate one (an emptied string, or a
+      # near-empty `{}`).
+      no-m1-secret-leak = let
+        lib = inputs.nixpkgs.lib;
+        clients = ["m1-personal" "m1-evojam" "m1-parloa"];
+        minSshLen = 100;
+        minGitLen = 500;
+        sshTextOf = c: self.homeConfigurations.${c}.config.home.file.".ssh/config".text or "";
+        gitJsonOf = c: builtins.toJSON self.homeConfigurations.${c}.config.programs.git.settings;
+        renderedSsh = lib.genAttrs clients sshTextOf;
+        renderedGit = lib.genAttrs clients gitJsonOf;
+        sshTooShort = lib.filterAttrs (_c: t: builtins.stringLength t < minSshLen) renderedSsh;
+        gitTooShort = lib.filterAttrs (_c: t: builtins.stringLength t < minGitLen) renderedGit;
+        sshLeaking = lib.filterAttrs (_c: t: lib.hasInfix "/run/secrets" t) renderedSsh;
+        gitLeaking = lib.filterAttrs (_c: t: lib.hasInfix "/run/secrets" t) renderedGit;
+      in
+        if sshTooShort != {}
+        then throw "no-m1-secret-leak: rendered SSH config suspiciously short for: ${toString (builtins.attrNames sshTooShort)} — this check would otherwise pass VACUOUSLY on the ssh side; investigate before trusting a clean result"
+        else if gitTooShort != {}
+        then throw "no-m1-secret-leak: rendered GIT settings suspiciously short for: ${toString (builtins.attrNames gitTooShort)} — this check would otherwise pass VACUOUSLY on the git side; investigate before trusting a clean result"
+        else if sshLeaking != {}
+        then throw "SECRET LEAK: /run/secrets found in the rendered SSH config for: ${toString (builtins.attrNames sshLeaking)} — this box has no sops-nix, so an inherited default is a silent regression, not a benign one"
+        else if gitLeaking != {}
+        then throw "SECRET LEAK: /run/secrets found in the rendered GIT settings for: ${toString (builtins.attrNames gitLeaking)} — this box has no sops-nix, so an inherited default is a silent regression, not a benign one"
+        else pkgs.runCommand "no-m1-secret-leak" {} "echo ok > $out";
+    };
 
     packages.x86_64-linux.lxcTemplate = inputs.nixos-generators.nixosGenerate {
       system = "x86_64-linux";
