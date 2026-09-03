@@ -87,10 +87,17 @@
     export MONITOR_MACHINE="${toString machine}"
     exec ${pkgs.claude-monitor-hook}/bin/claude-monitor-cm-acp "$@"
   '';
+
+  brainctl = pkgs.writeShellScriptBin "brainctl" ''
+    [ -r "${tokenFile}" ] && export MONITOR_TOKEN="$(<"${tokenFile}")"
+    export MONITOR_URL="${p.monitorUrl}"
+    export MACHINE="${toString machine}"
+    exec ${pkgs.claude-monitor-hook}/bin/claude-monitor-brainctl "$@"
+  '';
 in
   lib.mkIf enable (lib.mkMerge [
     {
-      home.packages = [pkgs.claude-monitor-hook cmAcp];
+      home.packages = [pkgs.claude-monitor-hook cmAcp brainctl];
 
       # Runs after claudeStatuslineSettings (same file) so that key is preserved.
       home.activation.claudeMonitorHooks = lib.hm.dag.entryAfter ["writeBoundary" "claudeStatuslineSettings"] ''
