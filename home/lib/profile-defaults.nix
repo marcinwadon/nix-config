@@ -57,4 +57,14 @@
   # the token file is unreadable, MONITOR_TOKEN stays unset, and the host
   # silently never registers with the collector.
   monitorTokenFile = null;
+
+  # Same idea for the memory MCP token, which is a DIFFERENT secret: the
+  # collector resolves it to a machine label so a session's memory scope is
+  # DERIVED rather than claimed by the caller. null takes the platform default
+  # (/run/secrets/memory_mcp_token on Linux, ~/.config/claude-monitor/mcp-token
+  # on darwin); the M1 overrides it because that box has no sops-nix. Unlike
+  # MONITOR_TOKEN this one is read at ACTIVATION time, not runtime, because
+  # Claude Code wants the URL (token included) sitting in ~/.claude.json — so it
+  # lands in a 0600 file in $HOME, never in the Nix store.
+  memoryMcpTokenFile = null;
 }

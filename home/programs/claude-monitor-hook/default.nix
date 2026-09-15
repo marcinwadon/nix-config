@@ -37,6 +37,16 @@
     then "/run/secrets/monitor_token"
     else "${config.home.homeDirectory}/.config/claude-monitor/token";
 
+  # The MCP token is a separate secret from MONITOR_TOKEN: the collector maps it
+  # to a machine label, which is how a session's memory scope is DERIVED instead
+  # of trusted from the caller.
+  mcpTokenFile =
+    if p.memoryMcpTokenFile != null
+    then p.memoryMcpTokenFile
+    else if pkgs.stdenv.isLinux
+    then "/run/secrets/memory_mcp_token"
+    else "${config.home.homeDirectory}/.config/claude-monitor/mcp-token";
+
   wrapper = pkgs.writeShellScript "claude-monitor-hook-wrapper" ''
     [ -r "${tokenFile}" ] && export MONITOR_TOKEN="$(<"${tokenFile}")"
     export MONITOR_URL="${p.monitorUrl}"
@@ -124,6 +134,37 @@ in
             | .SessionEnd       = [{"hooks":[{"type":"command","command":$cmd}]}])
         ' "$SRC" > "$TMP" && mv "$TMP" "$SETTINGS"
         rm -f "$BASE"
+      '';
+
+      # Register the memory MCP server for this machine.
+      #
+      # A separate activation because it writes a DIFFERENT file: Claude Code
+      # keeps user-scope MCP servers in ~/.claude.json, not settings.json
+      # (verified with `claude mcp add --scope user`). Same non-destructive jq
+      # merge — that file also holds per-project state, so it is edited, never
+      # replaced.
+      #
+      # The token is read from disk at activation time and embedded in the URL,
+      # because an http MCP entry has nowhere else to carry it. It therefore
+      # lands in ~/.claude.json (0600, re-asserted below) and never in the Nix
+      # store. A missing or empty token file is a loud no-op rather than a
+      # broken URL: a half-written server would fail on every tool call, where
+      # an absent one simply offers no memory tools.
+      home.activation.claudeMonitorMcp = lib.hm.dag.entryAfter ["writeBoundary"] ''
+        TOKENFILE="${mcpTokenFile}"
+        CFG="$HOME/.claude.json"
+        if [ -r "$TOKENFILE" ] && [ -s "$TOKENFILE" ]; then
+          TOKEN="$(cat "$TOKENFILE")"
+          TMP=$(mktemp)
+          [ -f "$CFG" ] || echo '{}' > "$CFG"
+          ${pkgs.jq}/bin/jq --arg url "${p.monitorUrl}/mcp/$TOKEN" '
+            .mcpServers = ((.mcpServers // {})
+              | .memory = {"type":"http","url":$url})
+          ' "$CFG" > "$TMP" && mv "$TMP" "$CFG"
+          chmod 600 "$CFG"
+        else
+          echo "claude-monitor: no usable MCP token at ${mcpTokenFile}; memory MCP server not registered" >&2
+        fi
       '';
     }
     # Linux CTs: systemd user service (needs lingering for marcin — set in
