@@ -20,6 +20,9 @@
   sops.secrets.slack_channel_id = {};
   sops.secrets.llm_api_key = {};
   sops.secrets.llm_base_url = {};
+  # One MCP token per machine (see the collector service below).
+  sops.secrets.memory_mcp_tokens = {};
+  sops.secrets.brain_deploy_key = {};
 
   # LAN-only: 8787 = HTTP machine plane (hosts dial ws://, hooks POST);
   # 8443 = HTTPS for the browser/PWA (Service Workers need a secure context).
@@ -32,6 +35,32 @@
     serviceConfig = {
       ExecStart = pkgs.writeShellScript "claude-monitor-start" ''
         export MONITOR_TOKEN="$(cat "$CREDENTIALS_DIRECTORY/monitor_token")"
+        export HOME="/var/lib/claude-monitor"
+        export PATH="${pkgs.lib.makeBinPath [pkgs.git pkgs.openssh]}:$PATH"
+        export GIT_SSH_COMMAND="${pkgs.openssh}/bin/ssh -i $CREDENTIALS_DIRECTORY/brain_deploy_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile=/var/lib/claude-monitor/brain-known-hosts"
+        export GIT_AUTHOR_NAME="claude-monitor"
+        export GIT_AUTHOR_EMAIL="claude-monitor@users.noreply.github.com"
+        export GIT_COMMITTER_NAME="$GIT_AUTHOR_NAME"
+        export GIT_COMMITTER_EMAIL="$GIT_AUTHOR_EMAIL"
+
+        # Cross-session memory. The vault is canonical Markdown under git; the
+        # SQLite index beside it is derived and rebuildable. Unset MEMORY_VAULT
+        # leaves every memory route reporting {"enabled":false}.
+        export MEMORY_VAULT="/var/lib/claude-monitor/brain"
+        export MEMORY_INDEX="/var/lib/claude-monitor/memory-index.db"
+        export MEMORY_REMOTE="git@github.com:marcinwadon/second-brain.git"
+        # One opaque token per machine, read from sops: the MCP endpoint path
+        # carries it, and the server resolves it to a machine label so the scope
+        # can be DERIVED rather than claimed by the caller. It identifies a
+        # machine on a trusted LAN, not a user — same posture as MONITOR_TOKEN.
+        # It must not live in this file: this repository is public.
+        export MEMORY_MCP_TOKENS="$(cat "$CREDENTIALS_DIRECTORY/memory_mcp_tokens")"
+        if [ ! -d "$MEMORY_VAULT/.git" ]; then
+          ${pkgs.git}/bin/git clone --branch main "$MEMORY_REMOTE" "$MEMORY_VAULT"
+        fi
+        ${pkgs.git}/bin/git -C "$MEMORY_VAULT" config user.name "$GIT_AUTHOR_NAME"
+        ${pkgs.git}/bin/git -C "$MEMORY_VAULT" config user.email "$GIT_AUTHOR_EMAIL"
+        ${pkgs.git}/bin/git -C "$MEMORY_VAULT" config commit.gpgsign false
         # Dual-listener: HTTP :8787 (machines) always; HTTPS :8443 (browser/PWA)
         # with an auto self-signed cert. Cert + VAPID keys persist under the
         # StateDirectory (/var/lib/claude-monitor/tls). Trust the cert once per
@@ -60,6 +89,8 @@
         "monitor_token:/run/secrets/monitor_token"
         "llm_api_key:/run/secrets/llm_api_key"
         "llm_base_url:/run/secrets/llm_base_url"
+        "brain_deploy_key:/run/secrets/brain_deploy_key"
+        "memory_mcp_tokens:/run/secrets/memory_mcp_tokens"
       ];
       DynamicUser = true;
       StateDirectory = "claude-monitor"; # /var/lib/claude-monitor (db lives here)
@@ -70,9 +101,9 @@
 
   # Orchestrator: a headless sidecar that watches the collector's /stream SSE,
   # triages blocked sessions through an LLM + policy (via the operator's LiteLLM
-  # gateway), and relays to Slack (Socket Mode) with a live board. It is a plain
-  # dashboard client over localhost:8787 — no new collector endpoints, no token
-  # needed. Slack Socket Mode is an outbound WebSocket, so no inbound port either.
+  # gateway), and relays to Slack (Socket Mode) with a live board. Brain actions
+  # use the collector token; Slack Socket Mode is an outbound WebSocket, so no
+  # inbound port is needed.
   systemd.services.claude-monitor-orchestrator = {
     description = "claude-monitor Slack session orchestrator";
     wantedBy = ["multi-user.target"];
@@ -87,6 +118,7 @@
         export SLACK_CHANNEL_ID="$(cat "$CREDENTIALS_DIRECTORY/slack_channel_id")"
         export LLM_API_KEY="$(cat "$CREDENTIALS_DIRECTORY/llm_api_key")"
         export LLM_BASE_URL="$(cat "$CREDENTIALS_DIRECTORY/llm_base_url")"
+        export MONITOR_TOKEN="$(cat "$CREDENTIALS_DIRECTORY/monitor_token")"
         # Non-secret config (safe in the public repo).
         export LLM_MODEL="claude-sonnet-4-6"
         export COLLECTOR_BASE_URL="http://localhost:8787"
@@ -118,6 +150,7 @@
         "slack_channel_id:/run/secrets/slack_channel_id"
         "llm_api_key:/run/secrets/llm_api_key"
         "llm_base_url:/run/secrets/llm_base_url"
+        "monitor_token:/run/secrets/monitor_token"
       ];
       DynamicUser = true;
       StateDirectory = "claude-monitor-orchestrator"; # /var/lib/... (db + optional policy.md)
