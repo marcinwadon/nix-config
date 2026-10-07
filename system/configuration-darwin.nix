@@ -14,6 +14,9 @@
     # derivation, so the app and the kittens can't drift out of version sync.
     # Its config is Home Manager's (home/programs/kitty).
     pkgs.kitty
+    # Same reasoning as kitty: a GUI bundle here gets aliased into
+    # /Applications/Nix Apps by nix-darwin. Not in nixpkgs — see ./pkgs.
+    (pkgs.callPackage ./pkgs/ghosthub.nix {})
     pkgs.yubikey-manager
     pkgs.yubikey-personalization
     pkgs.gnupg
@@ -54,6 +57,17 @@
       AppleShowScrollBars = "Always";
       InitialKeyRepeat = 14;
       KeyRepeat = 1;
+    };
+
+    # Ghosthub bundles Sparkle and ships with auto-update on, but it lives in
+    # the read-only nix store and cannot replace itself. Turn the updater off
+    # so it doesn't nag with failures; version bumps happen in ./pkgs/ghosthub.nix.
+    CustomUserPreferences."com.ghosthub" = {
+      SUEnableAutomaticChecks = false;
+      SUAutomaticallyUpdate = false;
+      # Sparkle's first-run "check for updates automatically?" prompt would
+      # overwrite the above; pretend we've already answered it.
+      SUHasLaunchedBefore = true;
     };
   };
 
