@@ -78,11 +78,11 @@
         "nixpkgs-frontend": "nixpkgs-frontend"
       },
       "locked": {
-        "lastModified": 1790721321,
-        "narHash": "sha256-wKVSvrOlyt98QZJvIE6jgOyfstbo1sA/YFMV4Y7iJcw=",
+        "lastModified": 1791416884,
+        "narHash": "sha256-6zZaf1Cl0DtURSfnciWNoK1geHXcXbSvz9g7KhzCVCQ=",
         "owner": "marcinwadon",
         "repo": "claude-monitor",
-        "rev": "7f27fccf59278f45827c6260fd44278c7f349085",
+        "rev": "c6b1e5cde55c61170cf19e80115cf06d8d3bf197",
         "type": "github"
       },
       "original": {
