@@ -166,6 +166,37 @@ in
           echo "claude-monitor: no usable MCP token at ${mcpTokenFile}; memory MCP server not registered" >&2
         fi
       '';
+
+      # The same memory server for Codex, same token and URL. Nothing else
+      # writes it there: the host's mount writer manages only gateway mounts
+      # (its ownership check deliberately excludes the bare /mcp/<token> URL).
+      #
+      # Replace-on-every-activation rather than create-once (unlike
+      # codexWritableRoots), so a rotated token reaches Codex too. Where the
+      # table goes, and why not `codex mcp add`, is in codex-memory-mcp.awk.
+      # Verified that both terminal and ACP Codex sessions load MCP servers
+      # from this file. The write is skipped when nothing changed, so Codex's
+      # own file is not churned on every switch.
+      home.activation.codexMonitorMcp = lib.hm.dag.entryAfter ["writeBoundary"] ''
+        TOKENFILE="${mcpTokenFile}"
+        CFG="$HOME/.codex/config.toml"
+        if [ -r "$TOKENFILE" ] && [ -s "$TOKENFILE" ]; then
+          TOKEN="$(cat "$TOKENFILE")"
+          mkdir -p "$HOME/.codex"
+          [ -e "$CFG" ] || : > "$CFG"
+          TMP=$(mktemp)
+          ${pkgs.gawk}/bin/awk -v url="${p.monitorUrl}/mcp/$TOKEN" \
+            -f ${./codex-memory-mcp.awk} "$CFG" > "$TMP"
+          if ${pkgs.diffutils}/bin/cmp -s "$TMP" "$CFG"; then
+            rm -f "$TMP"
+          else
+            mv "$TMP" "$CFG"
+          fi
+          chmod 600 "$CFG"
+        else
+          echo "claude-monitor: no usable MCP token at ${mcpTokenFile}; memory MCP server not registered for Codex" >&2
+        fi
+      '';
     }
     # Linux CTs: systemd user service (needs lingering for marcin — set in
     # lxc-base). Gated on `machine` (a pure profile value), NOT pkgs.stdenv:

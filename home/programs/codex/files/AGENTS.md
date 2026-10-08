@@ -20,6 +20,13 @@ Before your first substantive answer, read these six files (~20 KB total):
 Do this once per session, quietly, before answering. Do not summarise them back
 to me unless I ask.
 
+Then, also once and quietly, call `memory_recent` from the `memory` MCP server
+for the current working directory. It returns what earlier sessions, Claude's
+included, did and left pending in this repo. Claude Code gets the same brief
+injected at session start; Codex has to ask for it. Use `memory_brief` or
+`memory_search` later when a subject comes up that earlier sessions may have
+covered. If the `memory` server is not available, skip this silently.
+
 ## Read on demand only
 
 Never read these whole at session start — open or grep them only when the task
