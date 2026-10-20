@@ -90,5 +90,6 @@ in [
   ./claude-code
   ./codex
   ./claude-monitor-hook
+  ./hennery-host
   more
 ]

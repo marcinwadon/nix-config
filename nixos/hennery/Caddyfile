@@ -1,0 +1,20 @@
+{
+    admin 127.0.0.1:@ADMIN_PORT@
+    auto_https off
+}
+:@TLS_PORT@ {
+    bind @BIND_V4@ @BIND_V6@
+    tls @CERT@ @KEY@
+    reverse_proxy 127.0.0.1:@BACKEND_PORT@ {
+        # Set replaces all incoming instances; never use an inbound XFF chain.
+        header_up Hennery-Client-IP {http.request.remote.host}
+        flush_interval -1
+        stream_close_delay 5m
+        lb_retries 0
+        transport http {
+            versions 1.1
+            dial_timeout 10s
+            keepalive 120s
+        }
+    }
+}

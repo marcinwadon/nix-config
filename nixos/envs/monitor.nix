@@ -2,7 +2,7 @@
 # collector + dashboard as a systemd service, reads the shared token from sops
 # via systemd credentials, and opens the dashboard port on the LAN.
 {pkgs, ...}: {
-  imports = [./../lxc-base.nix];
+  imports = [./../lxc-base.nix ./../hennery.nix];
   networking.hostName = "monitor";
 
   sops.defaultSopsFile = ../../secrets/monitor.yaml;

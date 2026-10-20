@@ -67,4 +67,13 @@
   # Claude Code wants the URL (token included) sitting in ~/.claude.json — so it
   # lands in a 0600 file in $HOME, never in the Nix store.
   memoryMcpTokenFile = null;
+
+  # hennery host (`hennery host run`), alongside — not instead of — the
+  # claude-monitor host above. false leaves the module a no-op (the CTs and the
+  # collector-only monitor box). The roots are the project picker's directories
+  # on THIS machine: keep them equal to this machine's entry in the collector's
+  # WORKSPACE_ROOTS (nixos/envs/monitor.nix), which drives claude-monitor's
+  # picker today. Pairing (`hennery host join`) is manual and happens once.
+  henneryHost = false;
+  henneryWorkspaceRoots = [];
 }

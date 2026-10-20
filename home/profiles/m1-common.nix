@@ -61,6 +61,11 @@ in
     # up with no memory tools.
     memoryMcpTokenFile = "${home}/.config/claude-monitor/mcp-token";
 
+    # hennery host, same root as the collector's WORKSPACE_ROOTS "m1-<client>"
+    # entry. Not a secret path, so not one of the numbered overrides.
+    henneryHost = true;
+    henneryWorkspaceRoots = ["${home}/Projects"];
+
     # Override 3 of 5. Also the GitHub auth identity, not just signing.
     #
     # Deliberately a WHOLESALE replacement (not a merge with common.git):

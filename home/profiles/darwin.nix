@@ -11,6 +11,14 @@ in {
   # at runtime (no sops on darwin); the wrapper reads it if present.
   monitorMachine = "mac";
 
+  # hennery host, same roots as the collector's WORKSPACE_ROOTS "mac" entry.
+  henneryHost = true;
+  henneryWorkspaceRoots = [
+    "/Users/marcinwadon/Projects/parloa"
+    "/Users/marcinwadon/Projects/marcinwadon"
+    "/Users/marcinwadon/Projects/evojam"
+  ];
+
   enableConstellationScripts = true;
   enableBspCleanup = true;
 

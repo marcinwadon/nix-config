@@ -41,6 +41,12 @@
       (_final: _prev: {
         herdr = inputs.herdr.packages.${system}.herdr;
       })
+      # hennery (collector on the monitor box, host on the Mac + M1 users):
+      # the signed release archives, not a source build. Version + per-system
+      # hashes live in that one file.
+      (final: _prev: {
+        hennery = final.callPackage ../system/pkgs/hennery.nix {};
+      })
     ]
     ++ inputs.nixpkgs.lib.optionals (system == "aarch64-darwin") [
       inputs.neovim-flake.overlays.${system}.default
