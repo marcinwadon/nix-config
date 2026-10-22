@@ -75,19 +75,21 @@
         "nixpkgs": [
           "nixpkgs"
         ],
-        "nixpkgs-frontend": "nixpkgs-frontend"
+        "nixpkgs-frontend": "nixpkgs-frontend",
+        "nixpkgs-runtime": "nixpkgs-runtime"
       },
       "locked": {
-        "lastModified": 1791452561,
-        "narHash": "sha256-Rx31op/xx9cIBs3DnxElUhNtHacrX9iHT9ipRiTd7Rg=",
+        "lastModified": 1792665215,
+        "narHash": "sha256-W1ucompybvnS2mI/y5HqL+Ypgs5TBcEE7ildfvTti2g=",
         "owner": "marcinwadon",
         "repo": "claude-monitor",
-        "rev": "ae2b52090636bbbb4b072f1308f5b5022ef7ed08",
+        "rev": "89a39358783dd5a15b11cd4d255578390d6173c4",
         "type": "github"
       },
       "original": {
         "owner": "marcinwadon",
         "repo": "claude-monitor",
+        "rev": "89a39358783dd5a15b11cd4d255578390d6173c4",
         "type": "github"
       }
     },
@@ -1085,6 +1087,40 @@
         "type": "github"
       }
     },
+    "nixpkgs-runtime": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1783224372,
+        "narHash": "sha256-8i/87eeoqiGE4yOTjwSA3Eh/ziJRQEmd/unYU+K27sk=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "d407951447dcd00442e97087bf374aad70c04cea",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "d407951447dcd00442e97087bf374aad70c04cea",
+        "type": "github"
+      }
+    },
+    "nixpkgs-runtime_2": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1783224372,
+        "narHash": "sha256-8i/87eeoqiGE4yOTjwSA3Eh/ziJRQEmd/unYU+K27sk=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "d407951447dcd00442e97087bf374aad70c04cea",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "d407951447dcd00442e97087bf374aad70c04cea",
+        "type": "github"
+      }
+    },
     "nixpkgs-stable": {
       "locked": {
         "lastModified": 1767313136,
@@ -1677,6 +1713,7 @@
         "nixos-generators": "nixos-generators",
         "nixpkgs": "nixpkgs_5",
         "nixpkgs-pre-nodepackages": "nixpkgs-pre-nodepackages",
+        "nixpkgs-runtime": "nixpkgs-runtime_2",
         "nixpkgs-stable": "nixpkgs-stable",
         "nurpkgs": "nurpkgs",
         "sops-nix": "sops-nix"
