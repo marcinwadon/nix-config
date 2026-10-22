@@ -15,6 +15,14 @@
   # cargo-vendor User-Agent). Darwin-only; Linux uses stock nixpkgs neovim.
   mkOverlays = system:
     [
+      (_final: _prev: let
+        runtimePkgs = import inputs.nixpkgs-runtime {
+          inherit system;
+          overlays = [(import ../nix/runtime-security-overlay.nix)];
+        };
+      in {
+        inherit (runtimePkgs) nodejs_22 nodejs-slim_22 nodejs_24 nodejs-slim_24;
+      })
       (mkFishOverlay system)
       inputs.claude-code.overlays.default
       inputs.nurpkgs.overlays.default

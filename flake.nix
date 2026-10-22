@@ -2,6 +2,11 @@
   description = "my nixos config";
 
   inputs = {
+    # Keep runtime security updates separate from the package-manager pin.
+    nixpkgs-runtime = {
+      url = "github:NixOS/nixpkgs/d407951447dcd00442e97087bf374aad70c04cea";
+      flake = false;
+    };
     nixpkgs.url = "nixpkgs/nixos-unstable";
 
     # Stable nixpkgs for packages that break on unstable
@@ -66,7 +71,8 @@
     # builder both need a token: `--option access-tokens github.com=<ghp_…>`
     # (or an access-tokens line in nix.conf). See docs/RUNBOOK-lxc.md.
     claude-monitor = {
-      url = "github:marcinwadon/claude-monitor";
+      # Security-only backport on the previously locked monitor revision.
+      url = "github:marcinwadon/claude-monitor/89a39358783dd5a15b11cd4d255578390d6173c4";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
